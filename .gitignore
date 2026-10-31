@@ -1,0 +1,28 @@
+# ---- DeskOrg: build output & local artifacts ----
+
+# Compiled installer output (distributed via GitHub Releases, not committed)
+/Installer/
+
+# Logs
+*.log
+DeskOrg.log
+
+# Per-user runtime data (created at runtime in %LOCALAPPDATA%\DeskOrg)
+# — never part of the repo, listed here for clarity.
+
+# Signing private keys — MUST NEVER be committed.
+# Only the PUBLIC certificate (DeskOrg-CodeSigning.cer) is tracked.
+*.pfx
+*.p12
+*.key
+*.snk
+
+# Dev backup copies
+*- Copy.ps1
+*- Copy.*
+
+# Windows / editor cruft
+Thumbs.db
+desktop.ini
+*.tmp
+~$*

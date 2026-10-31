@@ -1,0 +1,21 @@
+# Normalize line endings for text; keep Windows scripts CRLF-friendly.
+* text=auto
+
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.vbs  text eol=crlf
+*.json text eol=crlf
+*.iss  text eol=crlf
+*.md   text eol=lf
+
+# Treat binaries as binary (no EOL munging, no bad diffs).
+*.exe  binary
+*.ico  binary
+*.png  binary
+*.ttf  binary
+*.cer  binary
+
+# Help GitHub's language stats reflect that this is a PowerShell project.
+*.html linguist-documentation
+*.ttf  linguist-vendored
