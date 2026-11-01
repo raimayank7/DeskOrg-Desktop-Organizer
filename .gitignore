@@ -26,3 +26,6 @@ Thumbs.db
 desktop.ini
 *.tmp
 ~$*
+
+# Local build script for the website (docs/)
+/scripts-local/
