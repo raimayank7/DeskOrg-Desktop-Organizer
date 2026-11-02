@@ -292,7 +292,7 @@ try {
     Add-Content -LiteralPath $LogFile -Encoding UTF8 -Value (
         "`r`n==========================================`r`n" +
         "DeskOrg scan requested: $(Get-Date)`r`n" +
-        'Credits: Nivesh Sahayak - https://niveshsahayak.in'
+        'Designed & Developed by: Nivesh Sahayak - https://www.niveshsahayak.in'
     )
     Invoke-DeskOrg
     exit 0

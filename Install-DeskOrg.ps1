@@ -15,7 +15,7 @@ $IcoFile   = Join-Path $AppFolder 'DeskOrg.ico'
 Write-Host ""
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host "  DeskOrg - Setup for this PC" -ForegroundColor Cyan
-Write-Host "  Credits: Nivesh Sahayak | https://niveshsahayak.in"
+Write-Host "  Designed & Developed by: Nivesh Sahayak | https://www.niveshsahayak.in"
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host ""
 
