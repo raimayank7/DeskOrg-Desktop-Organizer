@@ -1,0 +1,47 @@
+<!--TITLE DeskOrg Install Help: SmartScreen, Security Prompt, Antivirus and More-->
+<!--DESC DeskOrg installer blocked or didn't finish? The usual reasons, from "Windows protected your PC" to antivirus and admin rights, each with a quick fix.-->
+<!--LD
+{"@context":"https://schema.org","@graph":[
+ {"@type":"HowTo","name":"Install DeskOrg when Windows blocks the installer","url":"{{SITE}}setup-help.html",
+  "step":[{"@type":"HowToStep","text":"In the blue \"Windows protected your PC\" box, click More info."},{"@type":"HowToStep","text":"Click Run anyway."},{"@type":"HowToStep","text":"Click Yes on the security prompt."}]},
+ {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DeskOrg","item":"{{SITE}}"},{"@type":"ListItem","position":2,"name":"Install help","item":"{{SITE}}setup-help.html"}]}
+]}
+-->
+<section class="ph">
+  <div class="wrap">
+    <p class="crumbs"><a href="/">DeskOrg</a> › Install help</p>
+    <span class="eyebrow"><i></i>Install help</span>
+    <h1>Let's get <span>DeskOrg installed</span></h1>
+    <p>If the install was blocked or didn't finish, here are the usual reasons, each with a quick fix.</p>
+  </div>
+</section>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="Messages">
+    <b>Messages</b>
+    <a href="#smartscreen">Windows protected your PC</a><a href="#uac">Security prompt</a><a href="#antivirus">Antivirus</a><a href="#admin">Administrator permission</a><a href="#in-use">A file is in use</a><a href="#stuck">Still stuck?</a>
+  </nav>
+  <article class="prose">
+    <p>DeskOrg is signed with its own certificate rather than an expensive commercial one. That keeps it free, but Windows doesn't recognise the publisher yet, so it plays it safe the first time. None of the steps below are risky: you're just telling Windows you trust this app.</p>
+    <div class="issues">
+      <section class="issue" id="smartscreen"><span class="tag t1">Most common</span><h2>"Windows protected your PC" (blue box)</h2>
+        <p>This is SmartScreen. It appears for any new app without a big-brand reputation.</p>
+        <ol><li>Click <b>More info</b> in the blue box.</li><li>Click the <b>Run anyway</b> button that appears.</li></ol></section>
+      <section class="issue" id="uac"><span class="tag t2">Common</span><h2>A Yes/No security prompt appeared and nothing happened</h2>
+        <p>That was User Account Control (UAC) asking for permission to install. If you clicked <b>No</b>, the install stops.</p>
+        <ol><li>Run <b>DeskOrgSetup.exe</b> again.</li><li>When the prompt appears, click <b>Yes</b>.</li></ol></section>
+      <section class="issue" id="antivirus"><span class="tag t3">Occasional</span><h2>Your antivirus blocked or removed the installer</h2>
+        <p>Some antivirus tools are cautious with brand-new, self-signed apps (a false alarm).</p>
+        <ol><li>Open your antivirus's <b>Quarantine</b> or <b>Protection history</b>.</li><li>Choose <b>Allow</b>, <b>Restore</b> or <b>Trust</b> for DeskOrg, then run the installer again.</li></ol></section>
+      <section class="issue" id="admin"><span class="tag t3">Occasional</span><h2>"You need administrator permission"</h2>
+        <p>DeskOrg installs into Program Files, which needs admin rights.</p>
+        <ol><li>Right-click <b>DeskOrgSetup.exe</b> › <b>Run as administrator</b>.</li><li>Click <b>Yes</b> on the prompt.</li></ol></section>
+      <section class="issue" id="in-use"><span class="tag t3">Occasional</span><h2>"A file is in use" or it couldn't replace files</h2>
+        <p>DeskOrg is already open, or a previous copy is still running.</p>
+        <ol><li>Close DeskOrg (check the taskbar and the system tray).</li><li>Run the installer again.</li></ol></section>
+      <section class="issue" id="stuck"><span class="tag t2">Last resort</span><h2>Still stuck?</h2>
+        <p>Restart your PC and run <b>DeskOrgSetup.exe</b> once more. If it still won't install, <a href="https://www.niveshsahayak.in/p/contact.html">contact us</a> and mention exactly which message you saw.</p></section>
+    </div>
+    <p><a class="btn btn-main" href="/download/">Download DeskOrg again</a></p>
+  </article>
+</div>

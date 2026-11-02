@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESC}}">
+<link rel="canonical" href="{{CANON}}">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DeskOrg">
+<meta property="og:title" content="{{TITLE}}">
+<meta property="og:description" content="{{DESC}}">
+<meta property="og:url" content="{{CANON}}">
+<meta property="og:image" content="{{SITE}}logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0B0D16">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="/site.css?v={{V}}">
+<script type="application/ld+json">
+{{LD}}
+</script>
+</head>
+<body class="pg-{{SLUG}}">
+<a class="skip" href="#main">Skip to content</a>
+<header class="hd">
+  <div class="wrap">
+    <a class="logo" href="/"><img src="/logo.png" alt="" width="34" height="34">DeskOrg</a>
+    <nav class="nav" aria-label="Main">
+      <a href="/#features">Features</a><a href="/#how">How it works</a><a href="/guide.html"{{CUR_guide}}>User guide</a><a href="/setup-help.html"{{CUR_setup-help}}>Install help</a><a href="/#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-main btn-sm" href="/download/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Download</span></a>
+  </div>
+</header>
+
+<main id="main">
+{{MAIN}}
+</main>
+
+<footer class="ft">
+  <div class="wrap ft-grid">
+    <div class="ft-brand">
+      <a class="logo" href="/"><img src="/logo.png" alt="" width="30" height="30">DeskOrg</a>
+      <p>A free Windows app that keeps your desktop tidy: one click, or automatically. Runs on your PC; nothing is uploaded.</p>
+      <a class="btn btn-main btn-sm" href="/download/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download v{{VERSION}}</a>
+    </div>
+    <nav aria-label="Product"><b>Product</b><a href="/#features">Features</a><a href="/guide.html">User guide</a><a href="/setup-help.html">Install help</a><a href="{{RELEASES}}">All versions</a></nav>
+    <nav aria-label="Legal"><b>Legal</b><a href="/privacy-policy.html">Privacy Policy</a><a href="/terms-of-use.html">Terms of Use</a><a href="/disclaimer.html">Disclaimer</a><a href="{{SITE}}LICENSE.txt">MIT licence</a></nav>
+    <nav aria-label="Contact"><b>Contact</b><a href="https://www.niveshsahayak.in/p/contact.html">Contact us</a><a href="tel:+918054009300">+91 80540 09300</a><a href="https://www.niveshsahayak.in/">niveshsahayak.in</a></nav>
+  </div>
+  <div class="wrap ft-bottom">
+    <span>© <span class="yr">2026</span> DeskOrg. All rights reserved. Windows is a trademark of Microsoft; DeskOrg is not affiliated with Microsoft.</span>
+    <span data-ns-credit="">Designed &amp; Developed by: <a href="https://www.niveshsahayak.in/">Nivesh Sahayak</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  [].forEach.call(document.querySelectorAll('.yr'), function (e) { e.textContent = new Date().getFullYear(); });
+  /* sections fade in as they scroll into view */
+  var els = document.querySelectorAll('.fade');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -40px' });
+    [].forEach.call(els, function (e) { io.observe(e); });
+  } else [].forEach.call(els, function (e) { e.classList.add('in'); });
+})();
+</script>
+<script async src="https://assets.niveshsahayak.in/assets/credit.js"></script>
+</body>
+</html>
