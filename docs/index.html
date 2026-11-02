@@ -2,190 +2,377 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DeskOrg — Free desktop organizer for Windows</title>
-<meta name="description" content="DeskOrg is a lightweight Windows app that automatically sorts your desktop into folders. Learn what it is and how to use it.">
-<meta name="theme-color" content="#07090F">
-<meta property="og:type" content="website">
-<meta property="og:title" content="DeskOrg — Free desktop organizer for Windows">
-<meta property="og:description" content="A lightweight Windows app that keeps your desktop tidy — automatically. What it is and how to use it.">
-<meta property="og:url" content="https://deskorg.niveshsahayak.in/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeskOrg — Free Desktop Organizer for Windows</title>
+<meta name="description" content="DeskOrg sorts the files on your Windows desktop into tidy folders with one click, or automatically in the background. Free, private, runs offline, code-signed.">
 <link rel="canonical" href="https://deskorg.niveshsahayak.in/">
-<meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/png;base64,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">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DeskOrg — Free Desktop Organizer for Windows">
+<meta property="og:description" content="One click sorts your desktop into folders. Or let DeskOrg file new files for you, automatically. Free and private.">
+<meta property="og:url" content="https://deskorg.niveshsahayak.in/">
+<meta property="og:image" content="https://deskorg.niveshsahayak.in/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0B0D16">
+<link rel="icon" href="logo.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"SoftwareApplication","name":"DeskOrg","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows",
+  "softwareVersion":"1.0.0","fileSize":"2.3 MB","downloadUrl":"https://deskorg.niveshsahayak.in/download/","url":"https://deskorg.niveshsahayak.in/","image":"https://deskorg.niveshsahayak.in/logo.png",
+  "description":"A lightweight Windows app that sorts the files on your desktop into category folders, on demand or automatically. Runs locally; nothing is uploaded.",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"INR"},
+  "author":{"@type":"Organization","name":"Nivesh Sahayak","url":"https://www.niveshsahayak.in/"}},
+ {"@type":"WebSite","name":"DeskOrg","url":"https://deskorg.niveshsahayak.in/"},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is DeskOrg free?","acceptedAnswer":{"@type":"Answer","text":"Yes. DeskOrg is free and released under the MIT licence. There are no ads, accounts or trials."}},
+  {"@type":"Question","name":"Does DeskOrg upload my files?","acceptedAnswer":{"@type":"Answer","text":"No. Everything runs on your PC. DeskOrg only moves files between folders on your own computer."}},
+  {"@type":"Question","name":"Does DeskOrg delete anything?","acceptedAnswer":{"@type":"Answer","text":"No. It moves files from the desktop into category folders using your rules, and protected file types are left where they are. The Activity log shows every move."}},
+  {"@type":"Question","name":"Why does Windows show a warning when I install it?","acceptedAnswer":{"@type":"Answer","text":"DeskOrg is code-signed with its own certificate, which Windows doesn't know yet. Click More info, then Run anyway. The Setup Help page explains every message you might see."}}
+ ]}
+]}
+</script>
 <style>
-  :root{
-    --bg:#07090F; --panel:#0E1424; --panel2:#151D32; --border:#243049;
-    --text:#EAF0FF; --muted:#9AA3C2; --teal:#2FE6C8; --purple:#8C7BFF;
-    --pink:#FF5C9A; --amber:#FFB44D; --blue:#49A6FF;
-    --grad:linear-gradient(100deg,#2FE6C8 0%,#8C7BFF 55%,#FF5C9A 100%);
-    --display:"Unbounded","Segoe UI",system-ui,sans-serif;
-    --body:Cambria,Georgia,"Times New Roman",serif;
-  }
-  *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:var(--body); font-size:17px; line-height:1.65;
-    -webkit-font-smoothing:antialiased; overflow-x:hidden; overflow-wrap:break-word;
-  }
-  img{max-width:100%;height:auto}
-  .wrap{max-width:860px; margin:0 auto;
-    padding-left:max(18px,env(safe-area-inset-left,0px));
-    padding-right:max(18px,env(safe-area-inset-right,0px));}
-  a{color:var(--teal); text-decoration:none; border-bottom:1px solid rgba(47,230,200,.35)}
-  a:hover{border-bottom-color:var(--teal)}
-  h1,h2,h3{font-family:var(--display); font-weight:800; line-height:1.15; text-wrap:balance}
+:root{
+  --bg:#F6F7FB;--bg2:#ECEEF7;--card:#FFFFFF;--ink:#12142B;--soft:#41456A;--muted:#6B7092;--line:rgba(18,20,43,.10);--line2:rgba(18,20,43,.18);
+  --teal:#13B89C;--violet:#6D5BEF;--pink:#E5447F;--grad:linear-gradient(100deg,#2FE6C8 0%,#8C7BFF 55%,#FF5C9A 100%);
+  --shadow:0 1px 2px rgba(18,20,43,.05),0 12px 32px -14px rgba(18,20,43,.22);
+  --body:"Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,sans-serif;--head:"Sora","Plus Jakarta Sans","Segoe UI",sans-serif;
+  color-scheme:light
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0B0D16;--bg2:#11142A;--card:#151933;--ink:#EEF1FF;--soft:#C3C8E8;--muted:#8F95BC;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.17);
+  --teal:#2FE6C8;--violet:#9C8DFF;--pink:#FF6FA6;--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -18px rgba(0,0,0,.8);color-scheme:dark}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.65 var(--body);-webkit-font-smoothing:antialiased}
+img,svg{display:block;max-width:100%}
+a{color:var(--violet)}
+.wrap{width:100%;max-width:1140px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--head);line-height:1.15;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;z-index:99;background:var(--card);padding:8px 14px;border-radius:10px}
 
-  /* HERO */
-  header.hero{text-align:center; padding-block:46px 30px; border-bottom:1px solid var(--border);
-    background:radial-gradient(120% 90% at 50% -10%,rgba(140,123,255,.18),transparent 60%);}
-  .logo{width:112px;height:112px;border-radius:26px;display:block;margin:0 auto 18px;
-    box-shadow:0 14px 40px rgba(140,123,255,.35)}
-  .brand{font-family:var(--display);font-weight:800;font-size:clamp(34px,8vw,52px);
-    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0}
-  .kicker{font-family:var(--display);font-weight:600;letter-spacing:.16em;text-transform:uppercase;
-    font-size:12px;color:var(--teal);margin:0 0 6px}
-  .tag{color:var(--muted);font-size:18px;margin:10px 0 0}
-  .pill{display:inline-block;margin-top:18px;padding:7px 15px;border:1px solid var(--border);
-    border-radius:999px;font-family:var(--display);font-size:12px;color:var(--muted);background:var(--panel);
-    max-width:100%;white-space:normal;line-height:1.8}
-  .pill b{color:var(--teal);font-weight:600}
+/* header */
+.hd{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.hd .wrap{display:flex;align-items:center;gap:22px;height:66px}
+.logo{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font:800 19px var(--head);letter-spacing:-.02em;margin-right:auto}
+.logo img{width:34px;height:34px;border-radius:10px}
+.nav{display:flex;gap:4px}.nav a{color:var(--soft);text-decoration:none;font-weight:600;font-size:14.5px;padding:8px 12px;border-radius:10px}
+.nav a:hover{color:var(--ink);background:var(--bg2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:12px 22px;border-radius:12px;font:700 15.5px var(--body);text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .15s,box-shadow .15s,filter .15s;white-space:nowrap}
+.btn svg{width:18px;height:18px}
+.btn-main{background:var(--grad);color:#0B0D16;box-shadow:0 10px 26px -10px rgba(140,123,255,.7)}
+.btn-main:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 14px 32px -10px rgba(140,123,255,.8)}
+.btn-ghost{background:var(--card);color:var(--ink);border-color:var(--line2)}.btn-ghost:hover{border-color:var(--violet)}
+.btn-sm{padding:9px 16px;font-size:14px;border-radius:10px}
+@media (max-width:860px){.nav{display:none}}
 
-  /* SECTIONS */
-  section{padding-block:34px;border-bottom:1px solid rgba(36,48,73,.6)}
-  h2{font-size:clamp(23px,5vw,30px);margin:0 0 6px}
-  .lead{color:var(--muted);margin:0 0 20px;font-size:16px}
-  p{margin:0 0 16px}
+/* hero */
+.hero{position:relative;overflow:hidden;padding:72px 0 64px}
+.hero::before{content:"";position:absolute;inset:-30% -10% auto;height:560px;background:radial-gradient(40% 50% at 25% 40%,rgba(47,230,200,.18),transparent 70%),radial-gradient(40% 50% at 75% 30%,rgba(140,123,255,.20),transparent 70%);pointer-events:none}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line2);font-size:13px;font-weight:700;color:var(--soft)}
+.eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px color-mix(in srgb,var(--teal) 22%,transparent)}
+.hero h1{font-size:clamp(36px,5.4vw,60px);margin:18px 0 16px}
+.hero h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:clamp(17px,1.6vw,19px);color:var(--soft);max-width:34em;margin:0 0 26px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.meta{margin:16px 0 0;font-size:13.5px;color:var(--muted)}
+.trust{display:flex;flex-wrap:wrap;gap:8px 18px;margin:26px 0 0;padding:0;list-style:none;color:var(--soft);font-size:14px;font-weight:600}
+.trust li{display:flex;align-items:center;gap:7px}.trust svg{width:17px;height:17px;color:var(--teal)}
 
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:6px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px}
-  .card .ic{font-size:22px;margin-bottom:8px}
-  .card h3{font-size:17px;margin:0 0 6px;color:var(--text)}
-  .card p{font-size:14.5px;color:var(--muted);margin:0}
+/* hero illustration: messy desktop -> sorted folders */
+.demo{position:relative;border-radius:22px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);padding:16px}
+.demo-bar{display:flex;gap:6px;margin:0 0 12px}.demo-bar i{width:10px;height:10px;border-radius:50%;background:var(--line2)}
+.desk{position:relative;height:300px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1d2350,#3b2b6e 55%,#5b2a5c)}
+.f{position:absolute;width:54px;text-align:center;font:600 10.5px/1.2 var(--body);color:#fff;transition:all .9s cubic-bezier(.6,.05,.25,1)}
+.f b{display:grid;place-items:center;width:40px;height:44px;margin:0 auto 5px;border-radius:7px;font:800 11px var(--body);color:#fff;box-shadow:0 6px 14px -6px rgba(0,0,0,.6)}
+.f.doc b{background:#3B82F6}.f.img b{background:#10B981}.f.exe b{background:#F59E0B}.f.zip b{background:#EF4444}
+.dir{position:absolute;width:74px;text-align:center;color:#fff;font:700 11px var(--body);opacity:0;transform:scale(.85);transition:all .6s .7s}
+.dir svg{width:58px;height:48px;margin:0 auto 4px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.desk.sorted .f{opacity:0;transform:scale(.3)}
+.desk.sorted .dir{opacity:1;transform:none}
+.demo-cap{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 0;font-size:13px;color:var(--muted)}
+.demo-cap button{font:700 13px var(--body);color:var(--violet);background:none;border:0;cursor:pointer;padding:6px}
+@media (prefers-reduced-motion:reduce){.f,.dir{transition:none}}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr}.hero{padding:48px 0}}
 
-  /* STEPS */
-  .step{display:flex;gap:16px;align-items:flex-start;background:var(--panel);
-    border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px}
-  .num{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
-    font-family:var(--display);font-weight:800;color:#07110F;background:var(--grad);font-size:17px}
-  .step .body{min-width:0}
-  .step h3{font-size:18px;margin:0 0 4px;color:var(--text)}
-  .step p{font-size:15px;color:var(--muted);margin:0}
-  .step .where{display:inline-block;margin-top:8px;font-family:var(--display);font-size:11px;
-    letter-spacing:.06em;color:var(--teal);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+/* sections */
+section{padding:72px 0}
+.sec-hd{max-width:640px;margin:0 0 36px}
+.kicker{font:800 12.5px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.sec-hd h2{font-size:clamp(28px,3.6vw,40px);margin:8px 0 10px}
+.sec-hd p{color:var(--soft);margin:0}
+.center{text-align:center;margin-left:auto;margin-right:auto}
+.alt{background:var(--bg2)}
 
-  .note{background:linear-gradient(180deg,rgba(255,180,77,.10),rgba(255,180,77,.02));
-    border:1px solid rgba(255,180,77,.35);border-radius:14px;padding:16px 18px;margin-top:8px}
-  .note b{color:var(--amber)}
-  .note p{margin:0;font-size:15px;color:#E9DEC9}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow)}
+.card .ic{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;margin:0 0 16px;color:#fff}
+.card .ic svg{width:24px;height:24px}
+.card h3{font-size:18px;margin:0 0 6px}.card p{margin:0;color:var(--soft);font-size:15.5px}
+.c1 .ic{background:linear-gradient(135deg,#2FE6C8,#13B89C)}.c2 .ic{background:linear-gradient(135deg,#8C7BFF,#6D5BEF)}.c3 .ic{background:linear-gradient(135deg,#FF8FB8,#E5447F)}
+.c4 .ic{background:linear-gradient(135deg,#FBBF24,#F59E0B)}.c5 .ic{background:linear-gradient(135deg,#60A5FA,#2563EB)}.c6 .ic{background:linear-gradient(135deg,#34D399,#059669)}
+@media (max-width:900px){.grid{grid-template-columns:1fr 1fr}}@media (max-width:600px){.grid{grid-template-columns:1fr}}
 
-  ul.clean{list-style:none;padding:0;margin:0}
-  ul.clean li{position:relative;padding:8px 0 8px 28px;border-bottom:1px solid rgba(36,48,73,.5);font-size:16px}
-  ul.clean li:last-child{border-bottom:0}
-  ul.clean li::before{content:"";position:absolute;left:4px;top:16px;width:9px;height:9px;border-radius:3px;background:var(--grad)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;counter-reset:s;padding:0;margin:0;list-style:none}
+.steps li{counter-increment:s;position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 24px 24px;box-shadow:var(--shadow)}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--grad);color:#0B0D16;font:800 16px var(--head);margin:0 0 14px}
+.steps h3{font-size:18px;margin:0 0 6px}.steps p{margin:0;color:var(--soft);font-size:15.5px}
+.steps code{font:600 13px ui-monospace,Consolas,monospace;background:var(--bg2);padding:2px 7px;border-radius:6px}
+@media (max-width:900px){.steps{grid-template-columns:1fr}}
 
-  footer{text-align:center;padding-block:34px 48px;color:var(--muted)}
-  footer .made{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--purple)}
-  footer .by{font-family:var(--display);font-weight:600;font-size:20px;color:var(--text);margin:6px 0}
-  footer .meta{font-size:15px}
-  .cta{display:inline-block;margin:18px 0 0;padding:12px 22px;border-radius:13px;
-    font-family:var(--display);font-weight:600;color:#07110F;background:var(--grad);border:0}
+/* control center mock */
+.app{display:grid;grid-template-columns:230px 1fr;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow)}
+.app-side{background:#12152B;color:#C9CDF0;padding:18px 12px;display:flex;flex-direction:column;gap:4px}
+.app-side .t{display:flex;align-items:center;gap:9px;padding:0 8px 14px;color:#fff;font:800 15px var(--head)}
+.app-side .t img{width:26px;height:26px;border-radius:7px}
+.tab{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:11px;border:0;background:none;color:inherit;font:600 14px var(--body);text-align:left;cursor:pointer}
+.tab span{font:700 11px ui-monospace,Consolas,monospace;opacity:.6}
+.tab:hover{background:rgba(255,255,255,.06)}.tab[aria-selected=true]{background:linear-gradient(100deg,rgba(47,230,200,.18),rgba(140,123,255,.22));color:#fff}
+.app-main{padding:30px 32px;min-height:270px}
+.app-main h3{font-size:22px;margin:0 0 8px}.app-main p{color:var(--soft);margin:0 0 14px}
+.app-main ul{margin:0;padding:0 0 0 20px;color:var(--soft)}.app-main li{margin:4px 0}
+@media (max-width:760px){.app{grid-template-columns:1fr}.app-side{flex-direction:row;overflow-x:auto;padding:10px}.app-side .t{display:none}.tab{flex:none;width:auto}.app-main{padding:22px 20px}}
 
-  @media(max-width:560px){
-    body{font-size:16px}
-    .hero{padding-block:34px 24px}
-    .logo{width:88px;height:88px;border-radius:22px}
-    .tag{font-size:16px}
-    section{padding-block:26px}
-    .step{padding:15px;gap:13px;border-radius:14px}
-    .num{width:34px;height:34px;font-size:15px}
-    .step h3{font-size:16px}
-    .card{padding:16px}
-    footer{padding-block:28px 40px}
-  }
-</style>
-<style>
-.dl{margin:26px auto 0;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center}
-.dl a.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:14px;background:var(--grad);color:#07090F;font:700 16px var(--display);text-decoration:none;box-shadow:0 10px 30px rgba(140,123,255,.35)}
-.dl a.btn:hover{filter:brightness(1.08)}
-.dl a.alt{color:var(--muted);font-size:14px;text-decoration:underline}
-.dl-note{color:var(--muted);font-size:14px;margin:12px auto 0;max-width:36em;text-align:center}
+/* install note */
+.note{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;background:var(--card);border:1px solid var(--line);border-left:5px solid #F59E0B;border-radius:18px;padding:24px;box-shadow:var(--shadow)}
+.note .ic{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;background:#F59E0B;color:#fff}.note .ic svg{width:24px;height:24px}
+.note h3{font-size:19px;margin:0 0 6px}.note p{margin:0 0 10px;color:var(--soft)}
+.note ol{margin:0 0 12px;padding-left:20px;color:var(--soft)}.note b{color:var(--ink)}
+@media (max-width:600px){.note{grid-template-columns:1fr}}
+
+/* faq */
+.faq{max-width:780px;margin:0 auto;display:grid;gap:10px}
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 20px}
+.faq summary{cursor:pointer;list-style:none;padding:17px 0;font-weight:700;display:flex;justify-content:space-between;gap:14px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font:600 22px/1 var(--body);color:var(--violet);transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 18px;color:var(--soft)}
+
+/* final cta + footer */
+.final{padding:0 0 80px}
+.final .box{position:relative;overflow:hidden;border-radius:26px;padding:48px 32px;text-align:center;background:linear-gradient(135deg,#141936,#2a1f55 60%,#45204a);color:#fff}
+.final .box::before{content:"";position:absolute;inset:0;background:radial-gradient(50% 80% at 20% 0%,rgba(47,230,200,.25),transparent 60%),radial-gradient(50% 80% at 85% 100%,rgba(255,92,154,.22),transparent 60%)}
+.final .box>*{position:relative}.final h2{font-size:clamp(26px,3.4vw,38px);margin:0 0 10px}.final p{color:#C9CDF0;margin:0 auto 24px;max-width:34em}
+.final .meta{color:#9AA0C8}
+footer{border-top:1px solid var(--line);padding:32px 0 40px;color:var(--muted);font-size:14.5px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;justify-content:space-between}
+footer nav{display:flex;flex-wrap:wrap;gap:6px 18px}footer a{color:var(--soft);text-decoration:none}footer a:hover{color:var(--violet)}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s,transform .6s}.fade.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}}
+@media (max-width:400px){.wrap{padding:0 16px}.btn{padding:12px 18px}.hd .btn-sm span{display:none}}
+
+/* sponsor cards (partner offers from the shared sponsor list; India-only offers only for visitors in India) */
+.spons-sec{padding:56px 0 8px}
+.spons-hd{display:flex;align-items:baseline;gap:10px;margin:0 0 14px}.spons-hd span{font:800 12px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.spons-hd small{color:var(--muted)}
+.spons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.spon{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center;background:var(--card);border:1px dashed var(--line2);border-radius:18px;padding:14px;color:var(--ink);text-decoration:none;transition:border-color .15s,transform .15s}
+.spon:hover{border-color:var(--violet);transform:translateY(-2px)}
+.spon img{width:150px;height:120px;object-fit:cover;border-radius:12px;background:var(--bg2)}
+.spon b{display:block;font:700 16.5px/1.3 var(--head);margin:0 0 4px}.spon p{margin:0 0 10px;color:var(--soft);font-size:14.5px;line-height:1.5}
+.spon em{font-style:normal;display:inline-block;padding:7px 14px;border-radius:10px;background:var(--bg2);color:var(--violet);font-weight:700;font-size:14px}
+@media (max-width:820px){.spons{grid-template-columns:1fr}}@media (max-width:440px){.spon{grid-template-columns:1fr}.spon img{width:100%;height:auto;aspect-ratio:16/9}}
 </style>
 </head>
 <body>
-<header class="hero">
+<a class="skip" href="#main">Skip to content</a>
+<header class="hd">
   <div class="wrap">
-    <img class="logo" src="data:image/png;base64,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" alt="DeskOrg logo">
-    <p class="kicker">Desktop Workspace</p>
-    <h1 class="brand">DeskOrg</h1>
-    <p class="tag">Your desktop, sorted. Organize files, automate the cleanup, keep your flow.</p>
-    <span class="pill">Signed &amp; tamper-protected · <b>Built by Nivesh Sahayak</b></span>
-    <div class="dl"><a class="btn" href="download/">⬇ Download DeskOrg for Windows</a><a class="alt" href="setup-help.html">Install help</a></div>
-    <p class="dl-note">Free · MIT licence · Windows only. The first time, Windows may say "Windows protected your PC": click <b>More info → Run anyway</b>.</p>
+    <a class="logo" href="./"><img src="logo.png" alt="" width="34" height="34">DeskOrg</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#features">Features</a><a href="#how">How it works</a><a href="#app">The app</a><a href="#faq">FAQ</a><a href="guide.html">Guide</a>
+    </nav>
+    <a class="btn btn-main btn-sm" href="download/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Download</span></a>
   </div>
 </header>
 
-<main class="wrap">
-
-  <section>
-    <h2>What is DeskOrg?</h2>
-    <p class="lead">A lightweight Windows app that keeps your desktop tidy — automatically.</p>
-    <p>DeskOrg sorts the files cluttering your desktop into neat category folders (documents, images, installers, and more) using rules you control. It can run on demand with one click, or quietly in the background so new files get filed the moment they land. Everything runs locally on your PC — nothing is uploaded anywhere.</p>
-    <div class="cards">
-      <div class="card"><div class="ic">🧹</div><h3>One-click cleanup</h3><p>Sort a messy desktop into folders instantly with “Organize Now”.</p></div>
-      <div class="card"><div class="ic">🤖</div><h3>Smart automation</h3><p>A background watcher files new items for you, hands-free.</p></div>
-      <div class="card"><div class="ic">🛡️</div><h3>Safe &amp; yours</h3><p>Signed code, local-only, with rules and protected file types you set.</p></div>
+<main id="main">
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow"><i></i>Free for Windows · v1.0.0</span>
+      <h1>Your desktop, <span>sorted automatically.</span></h1>
+      <p class="lead">DeskOrg moves the files piling up on your desktop into tidy folders: documents, images, installers and more. Do it with one click, or let it file new things for you the moment they land.</p>
+      <div class="cta">
+        <a class="btn btn-main" href="download/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Windows</a>
+        <a class="btn btn-ghost" href="#how">See how it works</a>
+      </div>
+      <p class="meta">Free · 2.3 MB installer · MIT licence · <a href="setup-help.html">Install help</a></p>
+      <ul class="trust">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Runs offline</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Nothing uploaded</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Code-signed</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>No ads, no account</li>
+      </ul>
     </div>
-  </section>
+    <div class="demo" aria-label="A messy desktop being sorted into folders">
+      <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="desk" id="desk" aria-hidden="true">
+        <div class="f doc" style="left:6%;top:8%"><b>DOC</b>Invoice_final(2).docx</div>
+        <div class="f img" style="left:30%;top:14%"><b>JPG</b>IMG_2041.jpg</div>
+        <div class="f exe" style="left:58%;top:6%"><b>EXE</b>setup.exe</div>
+        <div class="f zip" style="left:80%;top:20%"><b>ZIP</b>photos.zip</div>
+        <div class="f img" style="left:12%;top:42%"><b>PNG</b>Screenshot 14.png</div>
+        <div class="f doc" style="left:40%;top:46%"><b>PDF</b>Report.pdf</div>
+        <div class="f exe" style="left:66%;top:44%"><b>MSI</b>driver.msi</div>
+        <div class="f doc" style="left:22%;top:72%"><b>XLS</b>Budget.xlsx</div>
+        <div class="f img" style="left:52%;top:74%"><b>JPG</b>Holiday.jpg</div>
+        <div class="f zip" style="left:80%;top:68%"><b>RAR</b>backup.rar</div>
+        <div class="dir" style="left:9%;top:22%"><svg viewBox="0 0 64 52"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v30a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#3B82F6"/><path d="M4 18h56v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#60A5FA"/></svg>Documents</div>
+        <div class="dir" style="left:34%;top:22%"><svg viewBox="0 0 64 52"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v30a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#059669"/><path d="M4 18h56v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#34D399"/></svg>Images</div>
+        <div class="dir" style="left:59%;top:22%"><svg viewBox="0 0 64 52"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v30a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#D97706"/><path d="M4 18h56v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#FBBF24"/></svg>Installers</div>
+        <div class="dir" style="left:34%;top:58%"><svg viewBox="0 0 64 52"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v30a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#DC2626"/><path d="M4 18h56v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#F87171"/></svg>Archives</div>
+      </div>
+      <div class="demo-cap"><span id="demo-state">Before: a cluttered desktop</span><button type="button" id="demo-btn">Organize Now ▸</button></div>
+    </div>
+  </div>
+</section>
 
-  <section>
-    <h2>Quick start</h2>
-    <p class="lead">Three steps and you’re done.</p>
-    <div class="step"><div class="num">1</div><div class="body"><h3>Open DeskOrg</h3><p>Double-click the DeskOrg icon on your desktop (or find it in the Start Menu). A short splash appears, then the Control Center opens.</p></div></div>
-    <div class="step"><div class="num">2</div><div class="body"><h3>Go to Organize → Organize Now</h3><p>This sorts the files on your desktop into category folders using your current rules. That’s the core of DeskOrg.</p><span class="where">Sidebar: 02 Organize</span></div></div>
-    <div class="step"><div class="num">3</div><div class="body"><h3>(Optional) Turn on automation</h3><p>Want it hands-free? Enable Smart Automation so new files are filed automatically in the background.</p><span class="where">Sidebar: 03 Smart Automation</span></div></div>
-  </section>
+<section id="features" class="alt">
+  <div class="wrap">
+    <div class="sec-hd fade"><div class="kicker">Features</div><h2>Everything you need to keep a clean desktop</h2><p>Small, fast and focused on one job: putting files where they belong, without surprises.</p></div>
+    <div class="grid">
+      <div class="card c1 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 21 9-9M12.2 6.2 11 5M15 3l1.2 1.2M19 9l1 1M14 8l2-2"/><path d="m6 18 3-3"/></svg></div><h3>One-click cleanup</h3><p>Press <b>Organize Now</b> and every loose file on the desktop goes into its category folder in seconds.</p></div>
+      <div class="card c2 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Smart automation</h3><p>Turn on the background watcher and new downloads and saves are filed for you, hands-free.</p></div>
+      <div class="card c3 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Your rules</h3><p>Choose which file types go into which folder. Add, rename or remove categories under <b>Rules &amp; Settings</b>.</p></div>
+      <div class="card c4 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h3>Protected file types</h3><p>Important files and shortcuts you mark as protected stay exactly where they are.</p></div>
+      <div class="card c5 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v6c0 4.5 3.4 7.5 8 8 4.6-.5 8-3.5 8-8V7z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Private by design</h3><p>Everything happens on your PC. No account, no tracking, nothing is uploaded anywhere.</p></div>
+      <div class="card c6 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 15h6M9 18h4"/></svg></div><h3>A log of every move</h3><p><b>Activity &amp; Logs</b> shows what was moved and where, so you can always find a file again.</p></div>
+    </div>
+  </div>
+</section>
 
-  <section>
-    <h2>The Control Center, section by section</h2>
-    <p class="lead">Five tabs down the left side of the window.</p>
-    <div class="step"><div class="num">01</div><div class="body"><h3>Overview</h3><p>Your home dashboard — a quick welcome and the current status of your setup (rules, automation, logs).</p></div></div>
-    <div class="step"><div class="num">02</div><div class="body"><h3>Organize</h3><p><b>Organize Now</b> runs the cleanup. You can also open your Windows Desktop folder or the DeskOrg application folder from here.</p></div></div>
-    <div class="step"><div class="num">03</div><div class="body"><h3>Smart Automation</h3><p>Install/enable the background watcher, check its status, disable it, or uninstall automation. Use this if you want filing to happen automatically.</p></div></div>
-    <div class="step"><div class="num">04</div><div class="body"><h3>Rules &amp; Settings</h3><p>Edit your saved rules (which file types go into which folder), open the application folder, and refresh the status shown on the home screen.</p></div></div>
-    <div class="step"><div class="num">05</div><div class="body"><h3>Activity &amp; Logs</h3><p>Open the DeskOrg log to see what was moved, and confirm the organizer and automation scripts are present.</p></div></div>
-  </section>
+<section id="how">
+  <div class="wrap">
+    <div class="sec-hd fade"><div class="kicker">How it works</div><h2>Tidy in three steps</h2><p>No setup to learn. Run it once to see your desktop sorted, then adjust the rules if you like.</p></div>
+    <ol class="steps">
+      <li class="fade"><h3>Install and open</h3><p>Run <code>DeskOrgSetup.exe</code>, then open DeskOrg from your desktop or Start Menu. The Control Center opens.</p></li>
+      <li class="fade"><h3>Organize Now</h3><p>Go to <b>Organize</b> and press <b>Organize Now</b>. Your desktop is sorted into category folders using your rules.</p></li>
+      <li class="fade"><h3>Automate (optional)</h3><p>In <b>Smart Automation</b>, turn on the watcher so new files are filed automatically from now on.</p></li>
+    </ol>
+  </div>
+</section>
 
-  <section>
-    <h2>Good to know</h2>
-    <ul class="clean">
-      <li><b>Your rules, your folders.</b> Categories and file types are fully editable under Rules &amp; Settings.</li>
-      <li><b>Protected file types stay put.</b> Certain extensions are handled carefully by the organizer so important files aren’t moved unexpectedly.</li>
-      <li><b>Settings live with you.</b> Your rules are saved in your own user profile, so they survive updates and reinstalls.</li>
-      <li><b>Signed &amp; verified.</b> DeskOrg’s files are code-signed, so Windows can confirm they haven’t been tampered with.</li>
-    </ul>
-    <div class="note"><p><b>Tip:</b> Run “Organize Now” once to see how your desktop gets sorted, then tweak the rules to taste before turning on automation.</p></div>
-  </section>
+<section id="app" class="alt">
+  <div class="wrap">
+    <div class="sec-hd fade"><div class="kicker">The app</div><h2>One Control Center, five simple tabs</h2><p>Everything is in one window. Click a tab to see what it does.</p></div>
+    <div class="app fade">
+      <div class="app-side" role="tablist" aria-label="Control Center tabs">
+        <div class="t"><img src="logo.png" alt="" width="26" height="26">DeskOrg</div>
+        <button class="tab" role="tab" aria-selected="true" data-tab="0"><span>01</span>Overview</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="1"><span>02</span>Organize</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="2"><span>03</span>Smart Automation</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="3"><span>04</span>Rules &amp; Settings</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="4"><span>05</span>Activity &amp; Logs</button>
+      </div>
+      <div class="app-main" role="tabpanel" id="panel" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
 
-  <section>
-    <h2>Having trouble installing?</h2>
-    <p class="lead">Because DeskOrg uses a self-made signature, Windows may show a caution the first time.</p>
-    <p>If the installer was blocked or didn’t finish, open the <a href="setup-help.html"><b>Setup Help</b></a> page (it’s in your Start Menu under DeskOrg, or shipped next to the installer) — it lists the common reasons (SmartScreen, the Yes/No security prompt, antivirus) and the one-click fix for each.</p>
-  </section>
+<section class="spons-sec" id="sponsors" hidden>
+  <div class="wrap">
+    <div class="spons-hd"><span>Sponsored</span><small>Offers from our partners</small></div>
+    <div class="spons" id="spons"></div>
+  </div>
+</section>
 
+<section id="install">
+  <div class="wrap">
+    <div class="note fade">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+      <div>
+        <h3>Windows may show a warning the first time</h3>
+        <p>DeskOrg is code-signed with its own certificate, which Windows SmartScreen doesn't know yet. It's safe to continue:</p>
+        <ol><li>On "Windows protected your PC", click <b>More info</b>.</li><li>Click <b>Run anyway</b>, then <b>Yes</b> on the next prompt.</li></ol>
+        <a class="btn btn-ghost btn-sm" href="setup-help.html">Every install message explained →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="alt">
+  <div class="wrap">
+    <div class="sec-hd center fade"><div class="kicker">FAQ</div><h2>Questions, answered</h2></div>
+    <div class="faq">
+      <details class="fade"><summary>Is DeskOrg free?</summary><p>Yes. DeskOrg is free and released under the MIT licence. There are no ads, accounts or trials.</p></details>
+      <details class="fade"><summary>Does DeskOrg upload my files?</summary><p>No. Everything runs on your PC. DeskOrg only moves files between folders on your own computer.</p></details>
+      <details class="fade"><summary>Does it delete anything?</summary><p>No. It moves files from the desktop into category folders using your rules, and protected file types are left where they are. The Activity log shows every move, so you can always find a file.</p></details>
+      <details class="fade"><summary>Can I change which folder a file type goes to?</summary><p>Yes. Open <b>Rules &amp; Settings</b> to edit categories and file types. Your rules are saved in your own Windows profile, so they survive updates and reinstalls.</p></details>
+      <details class="fade"><summary>Do I have to keep it running?</summary><p>No. Use <b>Organize Now</b> whenever you like. Only if you turn on <b>Smart Automation</b> does a small background watcher file new items for you; you can disable it any time.</p></details>
+      <details class="fade"><summary>How do I uninstall it?</summary><p>Open Windows <b>Settings › Apps</b>, find DeskOrg and choose <b>Uninstall</b>. Your organized folders stay on the desktop.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <div class="box fade">
+      <h2>Get a clean desktop in one click</h2>
+      <p>Download DeskOrg free and let it sort the clutter, today and every day after.</p>
+      <a class="btn btn-main" href="download/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Windows</a>
+      <p class="meta" style="margin-top:14px">v1.0.0 · 2.3 MB · <a style="color:#C9CDF0" href="https://github.com/raimayank7/DeskOrg-Desktop-Organizer/releases">All versions</a></p>
+    </div>
+  </div>
+</section>
 </main>
 
 <footer>
   <div class="wrap">
-    <p class="made">Made for your flow</p>
-    <p class="by">Nivesh Sahayak</p>
-    <p class="meta"><a href="https://niveshsahayak.in">niveshsahayak.in</a> · 8054009300</p>
-    <a class="cta" href="https://www.niveshsahayak.in/p/services.html">More from Nivesh Sahayak</a>
+    <div>© <span id="yr">2026</span> DeskOrg. All rights reserved. <span data-ns-credit="">Designed &amp; Developed by: Nivesh Sahayak</span></div>
+    <nav aria-label="Footer"><a href="guide.html">User guide</a><a href="setup-help.html">Install help</a><a href="https://github.com/raimayank7/DeskOrg-Desktop-Organizer/releases">Releases</a><a href="https://www.niveshsahayak.in/p/services.html">More from Nivesh Sahayak</a></nav>
   </div>
 </footer>
+
+<script>
+(function () {
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  /* hero demo: the cluttered desktop sorts itself, and the button toggles it */
+  var desk = document.getElementById('desk'), btn = document.getElementById('demo-btn'), st = document.getElementById('demo-state');
+  function set(on) { desk.classList.toggle('sorted', on); st.textContent = on ? 'After: everything in its folder' : 'Before: a cluttered desktop'; btn.textContent = on ? '↺ Show before' : 'Organize Now ▸'; }
+  btn.addEventListener('click', function () { set(!desk.classList.contains('sorted')); });
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(function () { set(true); }, 1800);
+  /* Control Center tabs */
+  var T = [
+    ['Overview', 'Your home dashboard: a quick welcome and the current state of your setup.', ['Rules in use', 'Whether automation is on', 'Where the log is kept']],
+    ['Organize', 'Runs the cleanup. One press sorts the desktop into category folders.', ['Organize Now', 'Open your Windows Desktop folder', 'Open the DeskOrg application folder']],
+    ['Smart Automation', 'A background watcher that files new items as they arrive.', ['Install and enable the watcher', 'Check its status', 'Disable or uninstall it any time']],
+    ['Rules & Settings', 'Decide which file types go into which folder.', ['Edit categories and file types', 'Protected types stay put', 'Saved in your own Windows profile']],
+    ['Activity & Logs', 'See exactly what was moved and where.', ['Open the DeskOrg log', 'Confirm the organizer and automation are installed', 'Find any file again']]
+  ];
+  var tabs = [].slice.call(document.querySelectorAll('.tab')), panel = document.getElementById('panel');
+  function show(i) {
+    tabs.forEach(function (t, k) { t.setAttribute('aria-selected', String(k === i)); });
+    panel.innerHTML = '<h3>' + T[i][0].replace('&', '&amp;') + '</h3><p>' + T[i][1] + '</p><ul>' + T[i][2].map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>';
+  }
+  tabs.forEach(function (t, k) { t.addEventListener('click', function () { show(k); }); });
+  show(0);
+
+  /* sponsor cards: the live sponsor list shared with GroupChatOn's sites; 2 at random, never our own Ko-fi card */
+  var india = false;
+  try { india = /^Asia\/(Kolkata|Calcutta)$/.test(Intl.DateTimeFormat().resolvedOptions().timeZone); } catch (e) {}
+  fetch('https://share.groupchaton.com/promos.json').then(function (r) { return r.json(); }).then(function (P) {
+    var list = ((P && P.promos) || []).filter(function (x) { return !x.own && x.imgs && x.imgs.length && (india || !x.india); });
+    if (!list.length) return;
+    list.sort(function () { return Math.random() - .5; });
+    var esc = function (t) { return String(t || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    document.getElementById('spons').innerHTML = list.slice(0, 2).map(function (x) {
+      var img = x.imgs[Math.floor(Math.random() * x.imgs.length)];
+      return '<a class="spon" href="' + esc(x.href) + '" target="_blank" rel="sponsored noopener"><img src="' + esc(img) + '" alt="' + esc(x.title) + '" loading="lazy">' +
+        '<span><b>' + esc(x.title) + '</b><p>' + esc(x.line) + '</p><em>' + esc(x.cta || 'Learn more') + ' ↗</em></span></a>';
+    }).join('');
+    document.getElementById('sponsors').hidden = false;
+  }).catch(function () {});
+  /* sections fade in as they scroll into view */
+  var els = document.querySelectorAll('.fade');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -40px' });
+    [].forEach.call(els, function (e) { io.observe(e); });
+  } else [].forEach.call(els, function (e) { e.classList.add('in'); });
+})();
+</script>
+<script async src="https://assets.niveshsahayak.in/assets/credit.js"></script>
 </body>
 </html>
