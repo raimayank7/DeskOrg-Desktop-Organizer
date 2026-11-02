@@ -1,12 +1,12 @@
 ; DeskOrg.iss - Inno Setup script for DeskOrgSetup.exe
 ; Builds a single portable installer that installs DeskOrg to Program Files,
 ; trusts the code-signing certificate for all users, adds shortcuts, and
-; registers an uninstaller. Credits: Nivesh Sahayak | https://niveshsahayak.in
+; registers an uninstaller. Designed & Developed by: Nivesh Sahayak | https://www.niveshsahayak.in
 
 #define AppName       "DeskOrg"
 #define AppVersion    "1.0.0"
 #define AppPublisher  "Nivesh Sahayak"
-#define AppURL        "https://niveshsahayak.in"
+#define AppURL        "https://www.niveshsahayak.in/"
 #define SrcDir        "C:\Users\Mayank-Rai\OneDrive\Mayank-Rai\MKR-Personal\ClaudeAi\DeskOrg"
 
 [Setup]
@@ -15,6 +15,7 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
+AppCopyright=Designed & Developed by: Nivesh Sahayak
 AppSupportURL={#AppURL}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}

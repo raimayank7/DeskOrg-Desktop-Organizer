@@ -1067,7 +1067,7 @@ $creditHeading = New-Text 'MADE FOR YOUR FLOW' 9 $script:C.Teal -Bold
 $creditHeading.Margin = '0,0,0,7'
 [void]$creditPanel.Children.Add($creditHeading)
 
-$creditBrand = New-Text 'Built by' 10 $script:C.Muted
+$creditBrand = New-Text 'Designed & Developed by:' 10 $script:C.Muted
 [void]$creditPanel.Children.Add($creditBrand)
 
 $creditName = New-Text 'Nivesh Sahayak' 14 $script:C.Text -Bold
@@ -1092,7 +1092,7 @@ $siteText.Margin = '0,0,0,5'
     (New-Object System.Windows.Documents.Run('Visit niveshsahayak.in'))
 )
 
-$siteLink.NavigateUri = [Uri]'https://niveshsahayak.in'
+$siteLink.NavigateUri = [Uri]'https://www.niveshsahayak.in/'
 $siteLink.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString($script:C.Teal)
 $siteLink.TextDecorations = $null
 $siteLink.ToolTip = 'Open the Nivesh Sahayak website'

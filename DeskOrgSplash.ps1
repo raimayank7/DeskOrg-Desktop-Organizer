@@ -71,7 +71,7 @@ $tagline.Margin = '0,0,0,20'
 [void]$panel.Children.Add($tagline)
 
 $credits = New-Object System.Windows.Controls.TextBlock
-$credits.Text = "Credits: Nivesh Sahayak`nhttps://niveshsahayak.in`n8054009300"
+$credits.Text = "Designed & Developed by: Nivesh Sahayak`nhttps://www.niveshsahayak.in`n8054009300"
 $credits.FontSize = 12
 $credits.Foreground = '#B8C5D6'
 $credits.TextAlignment = 'Center'

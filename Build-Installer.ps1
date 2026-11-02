@@ -45,7 +45,7 @@ Invoke-ps2exe `
     -iconFile   (Join-Path $AppFolder 'DeskOrg.ico') `
     -STA -noConsole -title 'DeskOrg' -product 'DeskOrg' `
     -description 'DeskOrg - Dynamic Desktop Organizer' `
-    -company 'Nivesh Sahayak' -copyright 'Nivesh Sahayak | https://niveshsahayak.in' `
+    -company 'Nivesh Sahayak' -copyright 'Designed & Developed by: Nivesh Sahayak | https://www.niveshsahayak.in' `
     -version '1.0.0.0' | Out-Null
 Write-Host "          DeskOrg.exe rebuilt." -ForegroundColor Green
 
