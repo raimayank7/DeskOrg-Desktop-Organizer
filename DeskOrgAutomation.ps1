@@ -1,4 +1,4 @@
-
+﻿
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [ValidateSet('Install', 'Status', 'Disable', 'Uninstall', 'Test')]
@@ -85,13 +85,18 @@ switch ($Action) {
         # Validate JSON before enabling background organization.
         $null = Get-Content -LiteralPath $Rules -Raw | ConvertFrom-Json
 
+        # Replace any watcher that is already running (for example one started
+        # by an older version) so the new hidden launch takes over.
+        Stop-Watcher
+
         Remove-Item -LiteralPath $StopFile -Force -ErrorAction SilentlyContinue
 
-        $arguments = '-NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy AllSigned -File "' +
+        $arguments = '--headless "' + $PowerShell +
+            '" -NoLogo -NoProfile -ExecutionPolicy AllSigned -File "' +
             $Watcher + '"'
 
         $taskAction = New-ScheduledTaskAction `
-            -Execute $PowerShell `
+            -Execute 'conhost.exe' `
             -Argument $arguments `
             -WorkingDirectory $PSScriptRoot
 
@@ -116,16 +121,16 @@ switch ($Action) {
             -Force | Out-Null
 
         # Start it now; the scheduled task starts it on future sign-ins.
-        Start-Process -FilePath $PowerShell `
+        Start-Process -FilePath 'conhost.exe' `
             -ArgumentList @(
+                '--headless',
+                $PowerShell,
                 '-NoLogo',
                 '-NoProfile',
-                '-WindowStyle', 'Hidden',
                 '-ExecutionPolicy', 'AllSigned',
                 '-File', "`"$Watcher`""
             ) `
-            -WorkingDirectory $PSScriptRoot `
-            -WindowStyle Hidden
+            -WorkingDirectory $PSScriptRoot
 
         Write-Log 'Smart Automation installed for the current user.'
         Write-Host 'DeskOrg Smart Automation is installed.'
@@ -188,11 +193,12 @@ switch ($Action) {
     }
 }
 
+
 # SIG # Begin signature block
 # MIIcOAYJKoZIhvcNAQcCoIIcKTCCHCUCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBlevv6gfJcqfg/
-# cuW2lTeSwPcJfpDkqnrLlCncxRi0+aCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAeap8QvA0MpK0K
+# L3xfajj/JpcUZAP5priDye74oPrYbaCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
 # qU1Saw4d1EDgMA0GCSqGSIb3DQEBCwUAMDAxLjAsBgNVBAMMJURlc2tPcmcgQ29k
 # ZSBTaWduaW5nIChOaXZlc2ggU2FoYXlhaykwHhcNMjYxMDMwMDEwMDQ5WhcNMzYx
 # MDMwMDExMDQ5WjAwMS4wLAYDVQQDDCVEZXNrT3JnIENvZGUgU2lnbmluZyAoTml2
@@ -316,28 +322,28 @@ switch ($Action) {
 # aWduaW5nIChOaXZlc2ggU2FoYXlhaykCEEB94TF+vEOpTVJrDh3UQOAwDQYJYIZI
 # AWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0B
 # CQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAv
-# BgkqhkiG9w0BCQQxIgQg4Kil+0Gfa+K+Z/XEZB/cEATzpjB+/xeIuzq/81lC16Iw
-# DQYJKoZIhvcNAQEBBQAEggEAfYWXJDc/d2uMfhdNep2+eTiUYCkdP0jizu2ot5eJ
-# bUm16yA9/jcClxykvXt4LC7ss5beFGiFUz7uTt7yKPo67nbVQy1lSH0RqeYWwKdY
-# pFKVmd7Rv23FhNDXf8prYPQI0SEStYWQml0gi7ws9oKvFRD9OpduGAbzhtNOWx/T
-# BKaon0HB244n5Wi9D+ijVSwZg3rsosfs9RHdvAjC74Fexem55j7YcWQbDAerIJU+
-# kMd0e9NTt1zFMxo/e5fnevt/PwzQnvpHsFCyaxAsHuwg8wLWLimU3YvxMDxvOUxJ
-# uFnsT6YEWQ9bxigh17KGngKA99hUm6SiRHII/2r1VT0KGKGCAyYwggMiBgkqhkiG
+# BgkqhkiG9w0BCQQxIgQg+q+VpFSDxh4cV16f/5dLNf73gPiDv4YZhXMzNJkmckQw
+# DQYJKoZIhvcNAQEBBQAEggEAX+385gZkXISn67zeL1Job3v1ztPm860/vh9uMvav
+# DA6WXqNvy/Hx6AnFDBdBtFuQKTqGDwCnCKmopVchTvbbhH37P3FhagikpaKsPZLp
+# CJ22G/p4wm5tZqTLLUZQ+X+OgBd6pJE2TnzGzWVGLgFlcbIR6jWwZRCFLmN1PUN7
+# QsDsJcvf5w2WCup6QpYUtUjGmAtXwDQzzb/0HcwccKHhY24tzJPIcIn6r8PcPtoU
+# wi7pE+akaxJziwiN7BO8j0GSg+QQiE4R2mmxu0Qo57dbPOPUCFfk5SvVtstyE8wL
+# GANTmGGJaXBc2HKLJoNlQyjiYDQCZQX1j/mZ6FURoETGRaGCAyYwggMiBgkqhkiG
 # 9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdp
 # Q2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBUaW1lU3Rh
 # bXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNPfkVO28MPj/mSGDUw
 # DQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
-# SIb3DQEJBTEPFw0yNjEwMzAwMzE5MTdaMC8GCSqGSIb3DQEJBDEiBCCcYCzC9zx9
-# UIWdiOkeAU9UnZd6iMdF4UuHw643BgZwKjANBgkqhkiG9w0BAQEFAASCAgC0yVJt
-# dyrdg6qm7JZo43tyAzrrVHZomR935BLYzeDSYElEf/RX2rddxBlpDFmNFQfejLFi
-# VVGcYR9xK8Xp+c/r9UUZxcPXcIPAjzP36EfXkbMK1bAxCx4Yysj8/H5lUH03wUF0
-# 4VBMMLcublTarYU14siiwvKu+tp8QKoi6OMaGDQXHoI0P3zK6NIBV2t1bzpFg5F/
-# RVczpLxlwJpeQoDZzITLa7fROhi4DuYr/NmP5TZtsoV9PxmjoSoSmuGn6taPNj2W
-# C1d2pfTqiYoFctWPnh+XEVsnnLswZufwsPka/SPiafzse4N7TAQZEQop6Nta2FS+
-# RtojYHrOnQSvqgduf7H/xOIjFisaRtsjh6z66n6j+CpJATR1jidTY1JanBrHhxRm
-# MYAej7kTGC8wGi1c0wFwH4bL/vRkXvbtX2Q4RSb1bN3uWDzaDOCDjuRVNRG02ko+
-# NFoZCnmBbmrGWTTL9ORShL9W4VB6nlZiNG1kDzAqTQPr0QoPcgOublVvXMCTY7kE
-# e53gyaE4V5qh/VCzjCLrxSBHxJxg9mFjAHL9oIRYJoMUmQt5m6+WURTHdWXQ+v+7
-# mSu1Z/5R9IeKX40atdWutM+sstpdbQZTDaUoMsIRZe9y/tbIhqjwMuAMxj8Gwc2G
-# UFDl38PU9UNrj5N40qvTUgFnqpBbSSaGuzJBgQ==
+# SIb3DQEJBTEPFw0yNjExMTMwMjM4MDNaMC8GCSqGSIb3DQEJBDEiBCCQl3siRqjK
+# lbRdfpLBouj4DZs9o/L1DsWPb72/hRcFZTANBgkqhkiG9w0BAQEFAASCAgAAUeha
+# hJLjJTXLV/hEwpODZHnMEeGRC/TOFd7pf0Qmj0mDxK8fAcRuYbaXYWInRzWiAAwc
+# 9DozVh4HmpNZFI5466U32lXm1i3TEFznlxglKauSDym9zhFcwUK0Z39yjvV7/VT7
+# 4ZlTJxU8ps6aMxqx2w7Vl0GNMdx2NYysBCX/QHTM5JoZ+xeO3SPkTLJXS2yprrF6
+# JIAj06h+1UN7BXTH/a/+amYledQYIq7EKK5IImMu0WOXhM5LdogU/szf1ylGlrJ6
+# DqQ9/b7jFGoSz64wI5oiqwKYWcvbaRuMTfTjLzqBAMVVj8ByHt/Q/bj5M1IWh7f5
+# bRmYM0Uzgi+Cl/HIcS96xQJTMcIBM2jKd6kKaROHCiBtr3dTGUOY/aXlgpIZ0xf9
+# 9u0MStv0QeD+fveA7/P4kSGTVDDJGceFEA16GCh0ceVStsAKg8/5x2q6Gvu1VTE5
+# A/sVGH0PNgwMZMBFdJlo7WAwLj0Mm6zV4nGJLcfRW+Wmxif/PRSMoBwgAgghUKO7
+# KZIxtNhxY0P2+d7FQ5y+1rumEn9cjVOrlhax74bbmfy8/f+b+iFCvwVi7ZZX2JXf
+# XmpmpqIdva4b7/vX+I/y/UMKfjWysoo0mA8hmKUzb0Wo+UoApaiP7rB8d5OVFyw2
+# ks5wHC4RfyhMobmA+S11/s5oanQu7mExSg6YvA==
 # SIG # End signature block

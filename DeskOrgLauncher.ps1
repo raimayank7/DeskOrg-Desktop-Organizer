@@ -1,4 +1,4 @@
-# DeskOrgLauncher.ps1
+﻿# DeskOrgLauncher.ps1
 # Entry point compiled into DeskOrg.exe by PS2EXE.
 # Resolves its own folder (works both as a .ps1 and as a compiled .exe)
 # and starts the splash screen, which then opens the Control Center.
@@ -35,10 +35,11 @@ if (-not (Test-Path -LiteralPath $SplashFile)) {
 }
 
 try {
-    Start-Process -FilePath 'powershell.exe' -ArgumentList @(
+    Start-Process -FilePath 'conhost.exe' -ArgumentList @(
+        '--headless',
+        'powershell.exe',
         '-NoLogo', '-NoProfile', '-STA',
         '-ExecutionPolicy', 'AllSigned',
-        '-WindowStyle', 'Hidden',
         '-File', "`"$SplashFile`""
     ) -WorkingDirectory $AppFolder
 } catch {
@@ -55,11 +56,13 @@ try {
     } catch { }
     exit 1
 }
+
+
 # SIG # Begin signature block
 # MIIcOAYJKoZIhvcNAQcCoIIcKTCCHCUCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDGlRIhVKHa3xzL
-# c55UP/umdcZRKO6DaEcuWiaYP0FBRaCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDom1d0SoXHFtnU
+# 0RWOCJPurhcfndk+UlfpOL8Ch1/Ma6CCFm4wggMwMIICGKADAgECAhBAfeExfrxD
 # qU1Saw4d1EDgMA0GCSqGSIb3DQEBCwUAMDAxLjAsBgNVBAMMJURlc2tPcmcgQ29k
 # ZSBTaWduaW5nIChOaXZlc2ggU2FoYXlhaykwHhcNMjYxMDMwMDEwMDQ5WhcNMzYx
 # MDMwMDExMDQ5WjAwMS4wLAYDVQQDDCVEZXNrT3JnIENvZGUgU2lnbmluZyAoTml2
@@ -183,28 +186,28 @@ try {
 # aWduaW5nIChOaXZlc2ggU2FoYXlhaykCEEB94TF+vEOpTVJrDh3UQOAwDQYJYIZI
 # AWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0B
 # CQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAv
-# BgkqhkiG9w0BCQQxIgQgQT2/ueVsNgASEV3IheVTJLomQrSOF+r1ueIqIsTVGFMw
-# DQYJKoZIhvcNAQEBBQAEggEAIKonvBWYxbLZwlKDprX0W4okFFVPNv5RQTJ6Elov
-# kPyA3bjVDmV+rkt0QDGBYlKDZs6s125MkayynhNo9attpxKlTgZLiUwb6bgGMSrP
-# enQNa5hMAdzavvRhtnF8sPuWxqe3AoQYejnWX7Xh47e7c7sx0qorPQebj6hHPXpd
-# hrnKSdxK9LHrn7L3y5srgJFtVJuOzGR0N8UBSQw3htKaSgIsfD5xj0CMNotUeUZO
-# wMyFpQzZyo9AnE5ClfJdh0MQR8gP4pJn8QL9clFGkSFnFm5xnWtRWLlxEjhG0iF/
-# Yosr04e1trpdQeKHnQDKsgIhFgChpVWtGCF1D2VObSFTm6GCAyYwggMiBgkqhkiG
+# BgkqhkiG9w0BCQQxIgQgPqMuPAayTGnodgIIPPsUIuSM1HSRxrTQnAwph/zh40gw
+# DQYJKoZIhvcNAQEBBQAEggEAFHxDOCj+KATDWkPrbmAGFYxOfk9pAW1yEqQNqDXx
+# GbrQN+aQhd51Gmy7JMo8+WVpRumkM3bKqKvo8IQNAbgPIqaNG0oiX4JtmhX4Z2yf
+# 7ctUHgidJJiKRl4V1xGg5jclr7fMBnY2mSQfYfDNbBDwndesvEItpqIpIYpkC15z
+# ZN/PY2KXwYHU9o3x9PG3Pbp0jMVkfGk6a5xbDdC5ffVwFVD4RZsnOjaa0uFn2SGM
+# RHLAVx6OFXE/bXBMr5bwXfCPd1h+iI5MPS9sKD6LSXv7OeDAS7oHVVWBuVAv3itJ
+# 2kMMf5nQKA5S+Ip8GjvE7DSR7Ny6HC3NTmEFhmVm8//uv6GCAyYwggMiBgkqhkiG
 # 9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdp
 # Q2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBUaW1lU3Rh
 # bXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNPfkVO28MPj/mSGDUw
 # DQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
-# SIb3DQEJBTEPFw0yNjEwMzAwMzE5MTdaMC8GCSqGSIb3DQEJBDEiBCBT48GO3fFY
-# p6NMVhkhJTRjeTBTpIyDpf3wKDMWrDv8RTANBgkqhkiG9w0BAQEFAASCAgBoV7sp
-# IUkl+C3tpvRhJV+8zpjY5Fyz+lg8LQtgIXvQz5XyFBBuf26Y9DMqma+1Eq8ZAgmh
-# nb8qYpLgDDBngxQd4E4eTNmOIUs7JSZs0ZndaRRhDWfmW2JPsREtpdUWz6duW2+K
-# ndlWdFTDrukoMwXdPV2tpLJ6yUK7KFw4qAo/roo/HeUyO8Wj6OC+hjQ0aZJT17CI
-# h5k8RftzpYGw7QBNl50bh3Wm0UP/MviJNramiw9+p1Uzbu4Ev4YEhrsRRRJ1syNL
-# CI7DwJzGqJjike2UF53WtEdbbvyA/diuWvOIm+StOQrh8gufebwGV71bc0y7HwoE
-# W3FpMwzS2K4WzsdQMEUkfODHIP8t/2y8Q7RCFLmk8TospbrCEG3vBFab7o58E6pJ
-# zxvxlbelpoTlMAyYY4qVg3iXjbGpXQ96OoU4xdf9O7AXYePnmC1QuMNd0FdozWjh
-# /FxmcaeDiNP/SUt5B6DNhnXm3ErvuSWtxyQ0nSmwSfOi3PP2UllUhBtUzZTrk5Fj
-# adq5k7fqUfAdr49Fsl2VMVjJlazos4m006CezsoW89a8Vh25dNRixcnDD5SL5Cki
-# yx6oSo/s0ADwPmrDz/tHb2uAM6E8MSIfA/ObyIf2vwOVRD5CtkCNF0bKiCoAgyOq
-# 6+/Qk4w+8Y97rBPAwO1my8YMeL9VbL28Jb5TKA==
+# SIb3DQEJBTEPFw0yNjExMTMwMjM4MDRaMC8GCSqGSIb3DQEJBDEiBCAN05wQytVp
+# X72wfqxcXT2xEyfV2LhIspLzW6LGwFvVsTANBgkqhkiG9w0BAQEFAASCAgA+rtYB
+# mXkxJ1eKAg4INAW2gU33Dy7C5kj7w+VOKjRtoqYQiPaXhHIaw4xbnPLNKYdgWDxh
+# 03ikG9COV2J+GdO35+zFphyvXmijgcoCv6B3E44ov+AwA/BvaDh+xQRaCJfs0Jdn
+# rJxN1XHD4usId1KaTT7MVJ/lbNGA5uIzrempBSoWJ/xAfwC4rp4cefjkh2eVIUWy
+# nZ0Ek4K7SwWeLF6A7AiLiu6crypSqZykKC/63RrwuwW54qOJakHw+HcWXxnX49fB
+# gplya8BEbueEjMIMO/3dWMlfTk9CiuyWqXoTOzfoVR3GmYW756Rrau8dV6iu4zTo
+# HEmKGhllEIeVU33JoctAs7vEzvcGzV10J/13dAGyOk8HtFaCgAbis2BJPTGJ/bF7
+# aXQPyLyNMz1bEP9HUTTt4zBh8CKk5L3KH+UtyvS0jJyqZtF7ahl91e2wPJUPi0vI
+# E3mDWbPK2HNV5ukxZtqt+0KhToKdygox7joDDlDmdHpz49fk7TEqwwieUvNYo+aS
+# gxpPt4znV1C07bNJSoXw4n6A1bo6T3jzIB4QgLSIWPdivwQZgFuB/tkH+0rHCDWq
+# QTsFiH6KiKcEx722yisG3PZ53EzEDLO2mnMyh9FFsj21227ZotGUgYGdQt02GYd9
+# zcsxvZMv9XXOdpx5SUvVyomFdUHVn/sRwejFFQ==
 # SIG # End signature block

@@ -4,7 +4,7 @@
 ; registers an uninstaller. Designed & Developed by: Nivesh Sahayak | https://www.niveshsahayak.in
 
 #define AppName       "DeskOrg"
-#define AppVersion    "1.0.0"
+#define AppVersion    "1.2.0"
 #define AppPublisher  "Nivesh Sahayak"
 #define AppURL        "https://www.niveshsahayak.in/"
 #define SrcDir        "C:\Users\Mayank-Rai\OneDrive\Mayank-Rai\MKR-Personal\ClaudeAi\DeskOrg"
@@ -24,7 +24,7 @@ PrivilegesRequired=admin
 OutputDir={#SrcDir}\Installer
 OutputBaseFilename=DeskOrgSetup
 SetupIconFile={#SrcDir}\DeskOrg.ico
-UninstallDisplayIcon={app}\DeskOrg.exe
+UninstallDisplayIcon={app}\DeskOrg.ico
 UninstallDisplayName={#AppName}
 Compression=lzma2/max
 SolidCompression=yes
@@ -36,10 +36,12 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 
 [Files]
 ; Program launcher + scripts
-Source: "{#SrcDir}\DeskOrg.exe";                DestDir: "{app}"; Flags: ignoreversion
+; No .exe is shipped: antivirus programs (K7) quarantine script-wrapped exes. Shortcuts run this .bat instead.
+Source: "{#SrcDir}\DeskOrgStart.bat";           DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcDir}\DeskOrgLauncher.ps1";        DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcDir}\DeskOrgSplash.ps1";          DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcDir}\DeskOrgControlCenter.ps1";   DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SrcDir}\DeskOrgExtras.ps1";          DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcDir}\DeskOrgOrganizer.ps1";       DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcDir}\DeskOrgWatcher.ps1";         DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcDir}\DeskOrgAutomation.ps1";      DestDir: "{app}"; Flags: ignoreversion
@@ -58,11 +60,15 @@ Source: "{#SrcDir}\DeskOrg-Setup-Help.html";    Flags: dontcopy
 Source: "{#SrcDir}\DeskOrg-CodeSigning.cer";    DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#AppName}";           Filename: "{app}\DeskOrg.exe"; IconFilename: "{app}\DeskOrg.ico"; WorkingDir: "{app}"
+Name: "{group}\{#AppName}";           Filename: "{app}\DeskOrgStart.bat"; IconFilename: "{app}\DeskOrg.ico"; WorkingDir: "{app}"; Flags: runminimized
 Name: "{group}\DeskOrg Guide";        Filename: "{app}\DeskOrg-Guide.html";      IconFilename: "{app}\DeskOrg.ico"
 Name: "{group}\Setup Help";           Filename: "{app}\DeskOrg-Setup-Help.html"; IconFilename: "{app}\DeskOrg.ico"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#AppName}";     Filename: "{app}\DeskOrg.exe"; IconFilename: "{app}\DeskOrg.ico"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autodesktop}\{#AppName}";     Filename: "{app}\DeskOrgStart.bat"; IconFilename: "{app}\DeskOrg.ico"; WorkingDir: "{app}"; Flags: runminimized; Tasks: desktopicon
+
+[InstallDelete]
+; Remove the old launcher exe left by earlier versions.
+Type: files; Name: "{app}\DeskOrg.exe"
 
 [Run]
 ; Trust the DeskOrg certificate for ALL users (runs elevated during install).
@@ -71,9 +77,13 @@ Filename: "powershell.exe"; \
   StatusMsg: "Trusting the DeskOrg certificate..."; Flags: runhidden waituntilterminated
 ; After a successful install, open the guide (checked by default) and offer to launch.
 Filename: "{app}\DeskOrg-Guide.html"; Description: "Open the DeskOrg guide (what it is & how to use it)"; Flags: shellexec postinstall skipifsilent
-Filename: "{app}\DeskOrg.exe"; Description: "Launch {#AppName} now"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\DeskOrgStart.bat"; Description: "Launch {#AppName} now"; Flags: nowait postinstall skipifsilent shellexec runminimized
 
 [UninstallRun]
+; Stop the background watcher and remove its startup task first.
+Filename: "powershell.exe"; \
+  Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\DeskOrgAutomation.ps1"" Uninstall"; \
+  Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RemoveDeskOrgTask"
 ; Remove the trusted certificate on uninstall (matches by subject).
 Filename: "powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Get-ChildItem Cert:\LocalMachine\Root, Cert:\LocalMachine\TrustedPublisher | Where-Object {{ $_.Subject -eq 'CN=DeskOrg Code Signing (Nivesh Sahayak)' } | Remove-Item -Force -ErrorAction SilentlyContinue"""; \

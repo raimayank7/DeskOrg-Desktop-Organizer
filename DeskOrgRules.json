@@ -2,6 +2,11 @@
 {
   "SourceFolder": "Desktop",
   "UnknownFileBehavior": "Other Files",
+  "SkipRecentMinutes": 1,
+  "DatedFolders": "None",
+  "Duplicates": "Rename",
+  "SkipFiles": [],
+  "ExtraFolders": [],
   "ProtectedExtensions": [
     ".lnk", ".url",
     ".exe", ".com", ".scr",

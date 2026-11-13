@@ -20,8 +20,8 @@ If Not fso.FileExists(splashFile) Then
     WScript.Quit 1
 End If
 
-command = "powershell.exe -NoLogo -NoProfile -STA " & _
-          "-ExecutionPolicy AllSigned -WindowStyle Hidden " & _
+command = "conhost.exe --headless powershell.exe -NoLogo -NoProfile -STA " & _
+          "-ExecutionPolicy AllSigned " & _
           "-File """ & splashFile & """"
 
 On Error Resume Next

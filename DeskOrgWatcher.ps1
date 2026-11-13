@@ -1,4 +1,4 @@
-
+﻿
 # ==========================================================
 # DeskOrg Smart Automation - Background Watcher
 # Credits: Nivesh Sahayak
@@ -26,8 +26,8 @@ $Organizer = Join-Path $PSScriptRoot 'DeskOrgOrganizer.ps1'
 $StopFile = Join-Path $env:TEMP 'DeskOrgWatcher.stop'
 $Mutex = $null
 $OwnsMutex = $false
-$Watcher = $null
-$Sources = @('DeskOrg.Created', 'DeskOrg.Changed', 'DeskOrg.Renamed')
+$Watchers = @()
+$Sources = @()
 
 function Write-Log {
     param([string]$Message)
@@ -36,51 +36,69 @@ function Write-Log {
     )
 }
 
-function Get-SourceFolder {
-    $source = 'Desktop'
+function Get-KnownFolderPath {
+    # 'Desktop' or 'Downloads' as set in the user's Windows profile.
+    param([string]$Name)
+    $guid = @{ Desktop = 'Desktop'; Downloads = '{374DE290-123F-4565-9164-39C4925E467B}' }[$Name]
+    $key = $null
+    try {
+        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey(
+            'Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
+        )
+        if ($null -ne $key) {
+            $value = $key.GetValue(
+                $guid, $null,
+                [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames
+            )
+            if ($value) {
+                $path = [Environment]::ExpandEnvironmentVariables([string]$value)
+                if (Test-Path -LiteralPath $path -PathType Container) {
+                    return (Get-Item -LiteralPath $path).FullName
+                }
+            }
+        }
+    }
+    finally {
+        if ($null -ne $key) { $key.Dispose() }
+    }
+    if ($Name -eq 'Desktop') { return [Environment]::GetFolderPath('DesktopDirectory') }
+    $p = Join-Path ([Environment]::GetFolderPath('UserProfile')) $Name
+    if (Test-Path -LiteralPath $p -PathType Container) { return $p }
+    return $null
+}
 
+function Resolve-WatchPath {
+    param([string]$Setting)
+    if ($Setting -in @('Desktop', 'Downloads')) { return (Get-KnownFolderPath $Setting) }
+    $p = [Environment]::ExpandEnvironmentVariables($Setting)
+    if (Test-Path -LiteralPath $p -PathType Container) { return (Get-Item -LiteralPath $p).FullName }
+    return $null
+}
+
+function Get-WatchFolders {
+    # The main folder plus any extra folders from the rules file.
+    $list = @()
+    $main = 'Desktop'
+    $extra = @()
     if (Test-Path -LiteralPath $RulesFile -PathType Leaf) {
         try {
             $config = Get-Content -LiteralPath $RulesFile -Raw | ConvertFrom-Json
-            if ($config.SourceFolder) { $source = [string]$config.SourceFolder }
+            if ($config.SourceFolder) { $main = [string]$config.SourceFolder }
+            foreach ($e in @($config.ExtraFolders)) { if ($e -and $e.Path) { $extra += [string]$e.Path } }
         }
         catch {
             Write-Log 'Rules file could not be read. Watching the Desktop fallback.'
         }
     }
-
-    if ($source -eq 'Desktop') {
-        $key = $null
-        try {
-            $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey(
-                'Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
-            )
-            if ($null -ne $key) {
-                $value = $key.GetValue(
-                    'Desktop', $null,
-                    [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames
-                )
-                if ($value) {
-                    $path = [Environment]::ExpandEnvironmentVariables([string]$value)
-                    if (Test-Path -LiteralPath $path -PathType Container) {
-                        return (Get-Item -LiteralPath $path).FullName
-                    }
-                }
-            }
-        }
-        finally {
-            if ($null -ne $key) { $key.Dispose() }
-        }
-
-        return [Environment]::GetFolderPath('DesktopDirectory')
+    $p = Resolve-WatchPath $main
+    if (-not $p) { throw "Configured watch folder does not exist: $main" }
+    $list += $p
+    foreach ($e in $extra) {
+        $q = Resolve-WatchPath $e
+        if ($q -and ($list -notcontains $q)) { $list += $q }
+        elseif (-not $q) { Write-Log "Extra folder not found, not watched: $e" }
     }
-
-    $source = [Environment]::ExpandEnvironmentVariables($source)
-    if (-not (Test-Path -LiteralPath $source -PathType Container)) {
-        throw "Configured watch folder does not exist: $source"
-    }
-
-    return (Get-Item -LiteralPath $source).FullName
+    return $list
 }
 
 function Invoke-Organizer {
@@ -89,7 +107,7 @@ function Invoke-Organizer {
     Write-Log 'Starting organizer scan.'
     & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
         -NoLogo -NoProfile -ExecutionPolicy AllSigned `
-        -File $Organizer
+        -File $Organizer -Auto
 
     Write-Log "Organizer exit code: $LASTEXITCODE"
 }
@@ -119,23 +137,24 @@ try {
         throw "Organizer script not found: $Organizer"
     }
 
-    $source = Get-SourceFolder
-    Write-Log "Monitoring: $source"
-
-    $Watcher = New-Object System.IO.FileSystemWatcher
-    $Watcher.Path = $source
-    $Watcher.Filter = '*'
-    $Watcher.IncludeSubdirectories = $false
-    $Watcher.NotifyFilter = [IO.NotifyFilters]'FileName, LastWrite, Size, CreationTime'
-
-    Register-ObjectEvent -InputObject $Watcher -EventName Created `
-        -SourceIdentifier 'DeskOrg.Created' | Out-Null
-    Register-ObjectEvent -InputObject $Watcher -EventName Changed `
-        -SourceIdentifier 'DeskOrg.Changed' | Out-Null
-    Register-ObjectEvent -InputObject $Watcher -EventName Renamed `
-        -SourceIdentifier 'DeskOrg.Renamed' | Out-Null
-
-    $Watcher.EnableRaisingEvents = $true
+    $folders = @(Get-WatchFolders)
+    $index = 0
+    foreach ($folder in $folders) {
+        $index++
+        Write-Log "Monitoring: $folder"
+        $w = New-Object System.IO.FileSystemWatcher
+        $w.Path = $folder
+        $w.Filter = '*'
+        $w.IncludeSubdirectories = $false
+        $w.NotifyFilter = [IO.NotifyFilters]'FileName, LastWrite, Size, CreationTime'
+        foreach ($evt in 'Created', 'Changed', 'Renamed') {
+            $id = "DeskOrg.$evt.$index"
+            Register-ObjectEvent -InputObject $w -EventName $evt -SourceIdentifier $id | Out-Null
+            $Sources += $id
+        }
+        $w.EnableRaisingEvents = $true
+        $Watchers += $w
+    }
 
     # Run once when the watcher starts.
     Invoke-Organizer
@@ -185,9 +204,8 @@ catch {
     Write-Log "FATAL ERROR: $($_.Exception.Message)"
 }
 finally {
-    if ($null -ne $Watcher) {
-        $Watcher.EnableRaisingEvents = $false
-        $Watcher.Dispose()
+    foreach ($w in $Watchers) {
+        try { $w.EnableRaisingEvents = $false; $w.Dispose() } catch { }
     }
 
     foreach ($sourceId in $Sources) {
@@ -203,11 +221,12 @@ finally {
     if ($null -ne $Mutex) { $Mutex.Dispose() }
 }
 
+
 # SIG # Begin signature block
 # MIIcOAYJKoZIhvcNAQcCoIIcKTCCHCUCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAJDTUrs7avvmY4
-# /g/pKmwZ/InPso29cb5Ms0qJxBzUdqCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDqmWiUBt8x1nzd
+# su/Ki+yHAITiksb0676ontWCIfRcBaCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
 # qU1Saw4d1EDgMA0GCSqGSIb3DQEBCwUAMDAxLjAsBgNVBAMMJURlc2tPcmcgQ29k
 # ZSBTaWduaW5nIChOaXZlc2ggU2FoYXlhaykwHhcNMjYxMDMwMDEwMDQ5WhcNMzYx
 # MDMwMDExMDQ5WjAwMS4wLAYDVQQDDCVEZXNrT3JnIENvZGUgU2lnbmluZyAoTml2
@@ -331,28 +350,28 @@ finally {
 # aWduaW5nIChOaXZlc2ggU2FoYXlhaykCEEB94TF+vEOpTVJrDh3UQOAwDQYJYIZI
 # AWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0B
 # CQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAv
-# BgkqhkiG9w0BCQQxIgQgP4esrP5+jSoWN7fcDXoUbtz8YbzI0SKRgXZeRGqWAKkw
-# DQYJKoZIhvcNAQEBBQAEggEAvD4osM27Zo80b6Nst5rw6mK7DHHO4o76jY+k6SA6
-# 9YDS+Ewy41mkeEDcA3NE6oliHdU/HuVsowgp52eIDvgtpbh1YzsUIMphfXRuqi69
-# R8WJGkldbdzkWykzmd8nSKs1rz9vOxrz3zDLHqVMcU+6LQith3gMbBUoHNZ5N9Hb
-# QDB3CbyLDDGoCHw5ISuarJf42IlDe28tFw1n3/mRsWIsEY2CIgVeMZwBdcDrFlZ4
-# hvLV3crLYgdBgNZSGwV8ClBrQJWPW4wJRBoyO5DyqaQnzU4pOihVIV1X3/ZF4ydl
-# kTd2IZpfvMIRoW8f0bkFf+dcoImNFDNyxtDHdQnzJZnQxKGCAyYwggMiBgkqhkiG
+# BgkqhkiG9w0BCQQxIgQgczEXVovgBA2Q/kjGI6HEoMdI/eSdAqpk/iCuZYXm4qQw
+# DQYJKoZIhvcNAQEBBQAEggEAfvUZW9/pWByGBYXmOpug2FcYo8jDk3m7JiEtZtEu
+# m6fGhJ+A4pYC9PrWUSEI8UK0cnecTM3O72qc2gDybYXf13EAb/kdQlCacsl7Yyac
+# k4uSboxJzaXRIcZCH/Tyfv8iQIKx2SCLE37tZ2ryJSc3ntrbP3CLlvTSJLWZDga7
+# hxytQ0n3pZxIw/CriR6gxskdiG1W7ykPbRo6j0iBfyD7pP6hehN/XQmh0tTY599e
+# W6zmflIp1ZoulweEeolasw5zryGYFvtKhbwBVwLP21ZFdVu1LZ2j5VhKilFGJ6gj
+# RcWxJjUUtWhQ12WxFBo4NrCgHRbHpO16qfVyz5KfaXTUxqGCAyYwggMiBgkqhkiG
 # 9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdp
 # Q2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBUaW1lU3Rh
 # bXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNPfkVO28MPj/mSGDUw
 # DQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
-# SIb3DQEJBTEPFw0yNjEwMzAwMzE5MThaMC8GCSqGSIb3DQEJBDEiBCBc42FVDif3
-# e4Vytyro8cEYmJSiip4wz5AR1kyYgioiWDANBgkqhkiG9w0BAQEFAASCAgCEpSZB
-# bZSC/1xuFlLhNcACq8TmuteWFhHS9M3J1iZnUPxrMzOaX9ESJFVAj38O/n9Xzgbv
-# RUtRK098qqdeuKLa+w48TxexIIwGU6VwDHq6Ky7SYBs6MEtzmu11+YwawQua0n3Q
-# /+tCebAl9FlPlQ+gdAwFvqMzJ8sIkISK2pVSspnBA0kSFb62F4q29UxJ/jy/wUYD
-# cNveCkZ9LTdJLWho/stLOpG1CCxBNcWPfzaDjTZKXN5u7b3MWbgJG0If2e8leVrp
-# FplEGlqPMAm4SD9Ps/MqPpedxmU3MNVDas5CaEdWkd5Wt8ySAVfC5ZEEkxr/ssgi
-# 9Ab5s7Z3xj7+uGorjbesTefFNrVZuDJQlsvokSAJKvbs3z/q0TAD1oL06+9eeBRY
-# 3AY5cwrOwU0q1j1Q0ZVKSj6Ek0uLKvy1Hk3nNIw8r3H/gX7hD3ePcP72nhj5BStI
-# qAd6yyY/IQemrdV2U3AY/IzdvIBGNL+86bMt8zLleiypMx2D8EE+zYcpiWPlVTJ+
-# +yb2AFR7+qELk2u9l2eNJnsswgAYvL2+i5Un960xbNLiAVsff7Pg4qAzE5sTGqSo
-# B4zEG4Oll26zeQKTMueqZ9ki6ku1salpJT8bOfJPkWWlfOajOepUm0XwrpC9LFIQ
-# XDwOmB/vtyMEvLBI6Af5JWK+DfhMhhVBlj+oqA==
+# SIb3DQEJBTEPFw0yNjExMTMwMjM4MDVaMC8GCSqGSIb3DQEJBDEiBCAVp/YXE8us
+# gslZEKe5zbK4Cl0T0qp8wXkAXrT1s3rLHDANBgkqhkiG9w0BAQEFAASCAgBDR5ln
+# gZzXpe4m9XgCPNar2GUJne3W/lXD5piHiimRFEbgTpUop0xPDOpZbD7obG2+zic6
+# +1VITdBiXLiQoxn3p9RJ5WX8OMkaJLqnAWTFlWhKH74/ubTa8Dzz4lXGjwgl6XOp
+# KoomFNwVmziifKM+BDGJn8jxdw51mErgJru+Wzj9ZehITG7l2Dfhs1AOI4Rvnthe
+# xpRL9SAea5B97LKEwb4kh9mr5vnmL3UmPUEfA6Hl3hs/RGFrIb1LCb1ei0TlQ0vu
+# LKlV6U7D2pei/g3Ef8IC0qJmjmljOP8/9PQsb5jOmTgtTlfh4FjB1l5l8dgxQKyq
+# Dv+LfkBjcgTHH4Ibn61WuDiQthfRtk2CVpI/2xrY7nSh7lACsMQxli7MMGr1v+GB
+# ZzskYfWEqlspWBp9x0zsEhup3WSI91wJ7hp1bRUz1ZCjlj5RanAYGu7NHLLxf0BX
+# 5PEX8Jrm4UnztYvdLGpg6csJRPpFb83tktZy/zKslCK6MuEwIG467kcgl3VunEde
+# HnF1M+C8Nzy8hxHhcGenUFbWJtuJ4sqiNAPoKZRjYLaDUCByjkHwRT8HyzJNqVr9
+# PNOytOUkPnJqjAocqtCUEaAaz3ePv09FsxaN8lUyYA3eZ/tzn3WNsDy9xZ6yChkZ
+# ZDV1y2TYtl86xG7RP+JhxW4HoQfsWcRmRBg8eQ==
 # SIG # End signature block

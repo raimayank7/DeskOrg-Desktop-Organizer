@@ -1,3 +1,11 @@
+﻿param(
+    [switch]$Preview,         # work out what would move, move nothing
+    [switch]$Undo,            # put back files moved earlier (the last run, or -Run / -File)
+    [switch]$Auto,            # started by the background watcher (pause, quiet hours, notification)
+    [switch]$FindDuplicates,  # look for identical files; writes duplicates.json, changes nothing
+    [string]$Run = '',        # with -Undo: the run record to undo (file name in the Runs folder)
+    [string]$File = ''        # with -Undo and -Run: put back just this one file (its current path)
+)
 
 # ==========================================================
 # DeskOrg - Dynamic Desktop Organizer
@@ -11,11 +19,18 @@ $LogFile = Join-Path $env:TEMP 'DeskOrg.log'
 # install location (e.g. C:\Program Files). Seed from the shipped default.
 $DataFolder = Join-Path $env:LOCALAPPDATA 'DeskOrg'
 $RulesFile  = Join-Path $DataFolder 'DeskOrgRules.json'
+$RunsFolder = Join-Path $DataFolder 'Runs'
+$PauseFile  = Join-Path $DataFolder 'paused.flag'
+$PreviewFile = Join-Path $DataFolder 'preview.json'
+$LastRunFile = Join-Path $DataFolder 'lastrun.json'
+$ProgressFile = Join-Path $DataFolder 'progress.json'
+$DupFile = Join-Path $DataFolder 'duplicates.json'
+$SettingsFile = Join-Path $DataFolder 'settings.json'
+if (-not (Test-Path -LiteralPath $DataFolder)) {
+    try { New-Item -ItemType Directory -Path $DataFolder -Force | Out-Null } catch { }
+}
 if (-not (Test-Path -LiteralPath $RulesFile)) {
     try {
-        if (-not (Test-Path -LiteralPath $DataFolder)) {
-            New-Item -ItemType Directory -Path $DataFolder -Force | Out-Null
-        }
         $DefaultRules = Join-Path $PSScriptRoot 'DeskOrgRules.json'
         if (Test-Path -LiteralPath $DefaultRules) {
             Copy-Item -LiteralPath $DefaultRules -Destination $RulesFile -Force
@@ -30,7 +45,21 @@ function Write-DeskOrgLog {
     )
 }
 
-function Get-DesktopPath {
+function Set-Progress {
+    # Lets the Control Center show "3 of 12" while a run is going.
+    param([string]$Phase, [int]$Done, [int]$Total, [string]$Current = '')
+    try {
+        (@{ Phase = $Phase; Done = $Done; Total = $Total; Current = $Current } | ConvertTo-Json) |
+            Set-Content -LiteralPath $ProgressFile -Encoding UTF8
+    } catch { }
+}
+
+function Clear-Progress { Remove-Item -LiteralPath $ProgressFile -Force -ErrorAction SilentlyContinue }
+
+function Get-KnownFolder {
+    # Resolves 'Desktop' or 'Downloads' from the user's own Windows settings.
+    param([string]$Name)
+    $guid = @{ Desktop = 'Desktop'; Downloads = '{374DE290-123F-4565-9164-39C4925E467B}' }[$Name]
     $key = $null
     try {
         $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey(
@@ -38,7 +67,7 @@ function Get-DesktopPath {
         )
         if ($null -ne $key) {
             $value = $key.GetValue(
-                'Desktop', $null,
+                $guid, $null,
                 [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames
             )
             if ($value) {
@@ -50,17 +79,54 @@ function Get-DesktopPath {
         }
     }
     catch {
-        Write-DeskOrgLog "WARNING: Desktop registry lookup: $($_.Exception.Message)"
+        Write-DeskOrgLog "WARNING: $Name registry lookup: $($_.Exception.Message)"
     }
     finally {
         if ($null -ne $key) { $key.Dispose() }
     }
 
-    $path = [Environment]::GetFolderPath('DesktopDirectory')
+    if ($Name -eq 'Desktop') {
+        $path = [Environment]::GetFolderPath('DesktopDirectory')
+    }
+    else {
+        $path = Join-Path ([Environment]::GetFolderPath('UserProfile')) $Name
+    }
     if ($path -and (Test-Path -LiteralPath $path -PathType Container)) {
         return (Get-Item -LiteralPath $path).FullName
     }
-    throw 'Could not locate the Windows Desktop folder.'
+    return $null
+}
+
+function Resolve-SourcePath {
+    param([string]$Setting)
+    if ($Setting -in @('Desktop', 'Downloads')) {
+        $p = Get-KnownFolder -Name $Setting
+        if (-not $p) { throw "Could not locate the Windows $Setting folder." }
+        return $p
+    }
+    $p = [Environment]::ExpandEnvironmentVariables($Setting)
+    if (-not (Test-Path -LiteralPath $p -PathType Container)) {
+        throw "Configured folder does not exist: $p"
+    }
+    return (Get-Item -LiteralPath $p).FullName
+}
+
+function Test-FolderName {
+    param([string]$Name)
+    return -not ([string]::IsNullOrWhiteSpace($Name) -or
+        $Name -match '[\\/:*?"<>|]' -or
+        $Name -in @('.', '..') -or
+        [IO.Path]::IsPathRooted($Name))
+}
+
+function Get-Language {
+    try {
+        if (Test-Path -LiteralPath $SettingsFile) {
+            $s = Get-Content -LiteralPath $SettingsFile -Raw | ConvertFrom-Json
+            if ($s.Language -in @('hi', 'pa')) { return [string]$s.Language }
+        }
+    } catch { }
+    return 'en'
 }
 
 function Get-DefaultRules {
@@ -87,7 +153,29 @@ function Get-DefaultRules {
             '.reg','.dll','.sys','.ocx','.drv','.sed'
         )
         Extensions = $map
+        SkipRecentMinutes = 1
+        SkipFiles = @()
+        DatedFolders = 'None'
+        Duplicates = 'Rename'
+        ExtraFolders = @()
+        NameRules = @()
+        SizeRules = @()
+        OldFiles = @{ Enabled = $false; Days = 90; Folder = 'Old' }
+        QuietHours = @{ Enabled = $false; From = '09:00'; To = '18:00' }
     }
+}
+
+function ConvertTo-ExtMap {
+    param($Obj)
+    $map = @{}
+    foreach ($property in $Obj.PSObject.Properties) {
+        $ext = ([string]$property.Name).ToLowerInvariant()
+        $category = [string]$property.Value
+        if ($ext -notmatch '^\.[a-z0-9_-]+$') { throw "Invalid extension: $ext" }
+        if (-not (Test-FolderName $category)) { throw "Invalid folder name for $ext" }
+        $map[$ext] = $category
+    }
+    return $map
 }
 
 function Get-Rules {
@@ -104,28 +192,96 @@ function Get-Rules {
             throw 'Required properties are missing.'
         }
 
-        $map = @{}
-        foreach ($property in $json.Extensions.PSObject.Properties) {
-            $ext = ([string]$property.Name).ToLowerInvariant()
-            $category = [string]$property.Value
-            if ($ext -notmatch '^\.[a-z0-9_-]+$') {
-                throw "Invalid extension: $ext"
-            }
-            if ([string]::IsNullOrWhiteSpace($category) -or
-                $category -match '[\\/:*?"<>|]' -or
-                $category -in @('.', '..') -or
-                [IO.Path]::IsPathRooted($category)) {
-                throw "Invalid folder name for $ext"
-            }
-            $map[$ext] = $category
-        }
+        $map = ConvertTo-ExtMap $json.Extensions
 
         $unknown = [string]$json.UnknownFileBehavior
         if ([string]::IsNullOrWhiteSpace($unknown)) { $unknown = 'Other Files' }
-        if ($unknown -ne 'Leave' -and
-            ($unknown -match '[\\/:*?"<>|]' -or $unknown -in @('.', '..') -or
-             [IO.Path]::IsPathRooted($unknown))) {
+        if ($unknown -ne 'Leave' -and -not (Test-FolderName $unknown)) {
             throw 'UnknownFileBehavior must be Leave or a folder name.'
+        }
+
+        # Optional settings (older rule files do not have them).
+        $recent = 1
+        if ($null -ne $json.SkipRecentMinutes) {
+            $recent = [int]$json.SkipRecentMinutes
+            if ($recent -lt 0 -or $recent -gt 1440) { throw 'SkipRecentMinutes must be 0 to 1440.' }
+        }
+        $dated = 'None'
+        if ($json.DatedFolders) {
+            $dated = [string]$json.DatedFolders
+            if ($dated -notin @('None', 'Month', 'Year')) { throw 'DatedFolders must be None, Month or Year.' }
+        }
+        $dup = 'Rename'
+        if ($json.Duplicates) {
+            $dup = [string]$json.Duplicates
+            if ($dup -notin @('Rename', 'Skip')) { throw 'Duplicates must be Rename or Skip.' }
+        }
+        $skipFiles = @()
+        if ($json.SkipFiles) { $skipFiles = @($json.SkipFiles | ForEach-Object { [string]$_ }) }
+
+        $extra = @()
+        if ($json.ExtraFolders) {
+            foreach ($e in @($json.ExtraFolders)) {
+                $p = [string]$e.Path
+                if ([string]::IsNullOrWhiteSpace($p)) { throw 'An extra folder has no Path.' }
+                $u = 'Leave'
+                if ($e.UnknownFileBehavior) { $u = [string]$e.UnknownFileBehavior }
+                if ($u -ne 'Leave' -and -not (Test-FolderName $u)) { throw "Invalid UnknownFileBehavior for $p" }
+                $ed = $dated
+                if ($e.DatedFolders) {
+                    $ed = [string]$e.DatedFolders
+                    if ($ed -notin @('None', 'Month', 'Year')) { throw "Invalid DatedFolders for $p" }
+                }
+                $edup = $dup
+                if ($e.Duplicates) {
+                    $edup = [string]$e.Duplicates
+                    if ($edup -notin @('Rename', 'Skip')) { throw "Invalid Duplicates for $p" }
+                }
+                $emap = $null
+                if ($e.Extensions) { $emap = ConvertTo-ExtMap $e.Extensions }
+                $extra += @{ Path = $p; UnknownFileBehavior = $u; DatedFolders = $ed; Duplicates = $edup; Extensions = $emap }
+            }
+        }
+
+        $nameRules = @()
+        foreach ($n in @($json.NameRules)) {
+            if (-not $n) { continue }
+            $m = [string]$n.Match; $f = [string]$n.Folder
+            if ([string]::IsNullOrWhiteSpace($m)) { throw 'A name rule has no pattern.' }
+            if (-not (Test-FolderName $f)) { throw "Invalid folder name for name rule '$m'" }
+            $nameRules += @{ Match = $m; Folder = $f }
+        }
+
+        $sizeRules = @()
+        foreach ($s in @($json.SizeRules)) {
+            if (-not $s) { continue }
+            $mb = [double]$s.MinMB; $f = [string]$s.Folder
+            if ($mb -le 0) { throw 'A size rule needs MinMB above 0.' }
+            if (-not (Test-FolderName $f)) { throw "Invalid folder name for size rule ($mb MB)" }
+            $types = @()
+            if ($s.Extensions) { $types = @($s.Extensions | ForEach-Object { ([string]$_).ToLowerInvariant() }) }
+            $sizeRules += @{ MinMB = $mb; Folder = $f; Extensions = $types }
+        }
+        $sizeRules = @($sizeRules | Sort-Object { $_.MinMB } -Descending)
+
+        $old = @{ Enabled = $false; Days = 90; Folder = 'Old' }
+        if ($json.OldFiles) {
+            $old.Enabled = [bool]$json.OldFiles.Enabled
+            if ($null -ne $json.OldFiles.Days) { $old.Days = [int]$json.OldFiles.Days }
+            if ($json.OldFiles.Folder) { $old.Folder = [string]$json.OldFiles.Folder }
+            if ($old.Days -lt 1 -or $old.Days -gt 3650) { throw 'OldFiles.Days must be 1 to 3650.' }
+            if (-not (Test-FolderName $old.Folder)) { throw 'Invalid OldFiles.Folder.' }
+        }
+
+        $quiet = @{ Enabled = $false; From = '09:00'; To = '18:00' }
+        if ($json.QuietHours) {
+            $quiet.Enabled = [bool]$json.QuietHours.Enabled
+            if ($json.QuietHours.From) { $quiet.From = [string]$json.QuietHours.From }
+            if ($json.QuietHours.To) { $quiet.To = [string]$json.QuietHours.To }
+            $tmp = [TimeSpan]::Zero
+            if (-not [TimeSpan]::TryParse($quiet.From, [ref]$tmp) -or -not [TimeSpan]::TryParse($quiet.To, [ref]$tmp)) {
+                throw 'QuietHours times must look like 09:00.'
+            }
         }
 
         return @{
@@ -136,6 +292,15 @@ function Get-Rules {
                     ForEach-Object { ([string]$_).ToLowerInvariant() }
             )
             Extensions = $map
+            SkipRecentMinutes = $recent
+            SkipFiles = $skipFiles
+            DatedFolders = $dated
+            Duplicates = $dup
+            ExtraFolders = $extra
+            NameRules = $nameRules
+            SizeRules = $sizeRules
+            OldFiles = $old
+            QuietHours = $quiet
         }
     }
     catch {
@@ -143,6 +308,16 @@ function Get-Rules {
         Write-DeskOrgLog 'Using built-in default rules.'
         return $defaults
     }
+}
+
+function Test-QuietNow {
+    param($Rules)
+    if (-not $Rules.QuietHours.Enabled) { return $false }
+    $from = [TimeSpan]::Parse($Rules.QuietHours.From)
+    $to = [TimeSpan]::Parse($Rules.QuietHours.To)
+    $now = (Get-Date).TimeOfDay
+    if ($from -le $to) { return ($now -ge $from -and $now -lt $to) }
+    return ($now -ge $from -or $now -lt $to)   # overnight, e.g. 22:00 to 06:00
 }
 
 function Test-StableFile {
@@ -178,10 +353,11 @@ function Test-StableFile {
 }
 
 function Get-UniqueDestination {
-    param([string]$Directory, [string]$FileName)
+    param([string]$Directory, [string]$FileName, $Planned)
 
     $target = Join-Path $Directory $FileName
-    if (-not (Test-Path -LiteralPath $target)) { return $target }
+    if (-not (Test-Path -LiteralPath $target) -and
+        -not ($Planned -and $Planned.ContainsKey($target.ToLowerInvariant()))) { return $target }
 
     $base = [IO.Path]::GetFileNameWithoutExtension($FileName)
     $ext = [IO.Path]::GetExtension($FileName)
@@ -189,9 +365,129 @@ function Get-UniqueDestination {
     do {
         $target = Join-Path $Directory ("{0} ({1}){2}" -f $base, $n, $ext)
         $n++
-    } while (Test-Path -LiteralPath $target)
+    } while ((Test-Path -LiteralPath $target) -or
+             ($Planned -and $Planned.ContainsKey($target.ToLowerInvariant())))
 
     return $target
+}
+
+function Save-LastRun {
+    param([hashtable]$Info)
+    try {
+        $Info.Time = (Get-Date).ToString('s')
+        ($Info | ConvertTo-Json -Depth 4) |
+            Set-Content -LiteralPath $LastRunFile -Encoding UTF8
+    } catch { }
+}
+
+function Show-Toast {
+    param([string]$Title, [string]$Text)
+    try {
+        [void][Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
+        [void][Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]
+        $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+        $esc = { param($s) [System.Security.SecurityElement]::Escape($s) }
+        $xml.LoadXml(
+            "<toast><visual><binding template='ToastGeneric'><text>$(& $esc $Title)</text>" +
+            "<text>$(& $esc $Text)</text></binding></visual></toast>")
+        $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
+        $appId = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
+        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appId).Show($toast)
+    }
+    catch { Write-DeskOrgLog "Notification not shown: $($_.Exception.Message)" }
+}
+
+function Get-Plan {
+    # Works out which files would move where, and why. Moves nothing.
+    param($Rules, $Spec, [hashtable]$Planned, [bool]$CheckStable)
+
+    $plan = @()
+    $skipped = 0
+    $now = Get-Date
+    $internal = @(
+        'DeskOrg.bat','DeskOrgOrganizer.ps1','DeskOrgWatcher.ps1',
+        'DeskOrgAutomation.ps1','DeskOrgRules.json','desktop.ini','thumbs.db'
+    )
+
+    # Only scan files directly in the folder, never recursively.
+    $files = @(Get-ChildItem -LiteralPath $Spec.Path -File -Force)
+    $total = $files.Count
+    $seen = 0
+    foreach ($file in $files) {
+        $seen++
+        if ($CheckStable -and ($seen % 3 -eq 0 -or $total -le 12)) { Set-Progress 'Checking' $seen $total $file.Name }
+        if ($file.Name -in $internal -or
+            ($file.Attributes -band ([IO.FileAttributes]::Hidden -bor [IO.FileAttributes]::System))) {
+            $skipped++; continue
+        }
+        $name = $file.Name
+        if (@($Rules.SkipFiles | Where-Object { $name -like $_ }).Count -gt 0) {
+            $skipped++; continue
+        }
+        $ext = $file.Extension.ToLowerInvariant()
+        if ($Rules.ProtectedExtensions -contains $ext) { $skipped++; continue }
+
+        # Which folder does this file go to, and why? First match wins.
+        $category = $null; $why = ''; $yearOnly = $false
+        $ageDays = ($now - $file.LastWriteTime).TotalDays
+        if ($Rules.OldFiles.Enabled -and $ageDays -ge $Rules.OldFiles.Days) {
+            $category = $Rules.OldFiles.Folder
+            $why = "Not touched for $([int]$Rules.OldFiles.Days)+ days"
+            $yearOnly = $true
+        }
+        if (-not $category) {
+            foreach ($nr in $Rules.NameRules) {
+                if ($name -like $nr.Match) { $category = $nr.Folder; $why = "Name matches '$($nr.Match)'"; break }
+            }
+        }
+        if (-not $category) {
+            $mb = $file.Length / 1MB
+            foreach ($sr in $Rules.SizeRules) {
+                if ($mb -ge $sr.MinMB -and ($sr.Extensions.Count -eq 0 -or $sr.Extensions -contains $ext)) {
+                    $category = $sr.Folder; $why = "Bigger than $($sr.MinMB) MB"; break
+                }
+            }
+        }
+        if (-not $category) {
+            if ($Spec.Ext.ContainsKey($ext)) { $category = $Spec.Ext[$ext]; $why = "File type $ext" }
+            elseif ($Spec.Unknown -eq 'Leave') { $skipped++; continue }
+            else {
+                $category = $Spec.Unknown
+                $why = if ($ext) { "Type $ext has no rule" } else { 'File has no type' }
+            }
+        }
+
+        if ($Rules.SkipRecentMinutes -gt 0 -and
+            ($now - $file.LastWriteTime).TotalMinutes -lt $Rules.SkipRecentMinutes) {
+            Write-DeskOrgLog "DEFERRED: Changed in the last $($Rules.SkipRecentMinutes) minute(s): $($file.FullName)"
+            $skipped++; continue
+        }
+
+        if ($CheckStable -and -not (Test-StableFile -File $file)) {
+            Write-DeskOrgLog "DEFERRED: File changing or busy: $($file.FullName)"
+            $skipped++; continue
+        }
+
+        $folder = Join-Path $Spec.Path $category
+        if ($yearOnly) { $folder = Join-Path $folder $file.LastWriteTime.ToString('yyyy') }
+        elseif ($Spec.Dated -eq 'Month') { $folder = Join-Path $folder $file.LastWriteTime.ToString('yyyy-MM') }
+        elseif ($Spec.Dated -eq 'Year') { $folder = Join-Path $folder $file.LastWriteTime.ToString('yyyy') }
+
+        $plain = Join-Path $folder $name
+        $exists = (Test-Path -LiteralPath $plain) -or $Planned.ContainsKey($plain.ToLowerInvariant())
+        if ($exists -and $Spec.Dup -eq 'Skip') {
+            Write-DeskOrgLog "SKIPPED (same name already there): $($file.FullName)"
+            $skipped++; continue
+        }
+
+        $target = Get-UniqueDestination -Directory $folder -FileName $name -Planned $Planned
+        $Planned[$target.ToLowerInvariant()] = $true
+        $plan += [pscustomobject]@{
+            From = $file.FullName; To = $target; Folder = $folder
+            Renamed = ($target -ne $plain); Why = $why
+        }
+    }
+    return @{ Plan = $plan; Skipped = $skipped }
 }
 
 function Invoke-DeskOrg {
@@ -207,80 +503,208 @@ function Invoke-DeskOrg {
             return
         }
 
+        if ($Auto -and (Test-Path -LiteralPath $PauseFile)) {
+            Write-DeskOrgLog 'Scan skipped: DeskOrg is paused.'
+            return
+        }
+
         $rules = Get-Rules
-        if ($rules.SourceFolder -eq 'Desktop') {
-            $source = Get-DesktopPath
-        }
-        else {
-            $source = [Environment]::ExpandEnvironmentVariables($rules.SourceFolder)
-            if (-not (Test-Path -LiteralPath $source -PathType Container)) {
-                throw "Configured source folder does not exist: $source"
-            }
-            $source = (Get-Item -LiteralPath $source).FullName
+        if ($Auto -and (Test-QuietNow $rules)) {
+            Write-DeskOrgLog 'Scan skipped: quiet hours.'
+            return
         }
 
-        Write-DeskOrgLog "Scan started. Source: $source"
-        $moved = 0
-        $skipped = 0
-        $failed = 0
-
-        # Only scan files directly in the source folder, never recursively.
-        $files = @(Get-ChildItem -LiteralPath $source -File -Force)
-        foreach ($file in $files) {
+        # Folders to look at: the main one, then any extra folders.
+        $folders = @()
+        $folders += @{
+            Path = (Resolve-SourcePath $rules.SourceFolder); Unknown = $rules.UnknownFileBehavior
+            Dated = $rules.DatedFolders; Dup = $rules.Duplicates; Ext = $rules.Extensions
+        }
+        foreach ($e in $rules.ExtraFolders) {
             try {
-                if ($file.Name -in @(
-                    'DeskOrg.bat','DeskOrgOrganizer.ps1',
-                    'DeskOrgWatcher.ps1','DeskOrgAutomation.ps1',
-                    'DeskOrgRules.json'
-                )) {
-                    $skipped++
-                    continue
+                $p = Resolve-SourcePath $e.Path
+                if (-not ($folders | Where-Object { $_.Path -eq $p })) {
+                    $ext = if ($e.Extensions) { $e.Extensions } else { $rules.Extensions }
+                    $folders += @{
+                        Path = $p; Unknown = $e.UnknownFileBehavior
+                        Dated = $e.DatedFolders; Dup = $e.Duplicates; Ext = $ext
+                    }
                 }
+            }
+            catch { Write-DeskOrgLog "WARNING: Extra folder skipped: $($_.Exception.Message)" }
+        }
 
-                $ext = $file.Extension.ToLowerInvariant()
-                if ($rules.ProtectedExtensions -contains $ext) {
-                    $skipped++
-                    continue
-                }
+        $mode = if ($Preview) { 'Preview' } else { 'Scan' }
+        Write-DeskOrgLog "$mode started. Folders: $(($folders | ForEach-Object { $_.Path }) -join '; ')"
 
-                if ($rules.Extensions.ContainsKey($ext)) {
-                    $category = $rules.Extensions[$ext]
-                }
-                elseif ($rules.UnknownFileBehavior -eq 'Leave') {
-                    $skipped++
-                    continue
-                }
-                else {
-                    $category = $rules.UnknownFileBehavior
-                }
+        $planned = @{}
+        $all = @()
+        $skipped = 0
+        foreach ($f in $folders) {
+            $r = Get-Plan -Rules $rules -Spec $f -Planned $planned -CheckStable (-not $Preview)
+            $all += $r.Plan
+            $skipped += $r.Skipped
+        }
 
-                # Never move a file that is still changing or locked.
-                if (-not (Test-StableFile -File $file)) {
-                    Write-DeskOrgLog "DEFERRED: File changing or busy: $($file.FullName)"
-                    $skipped++
-                    continue
+        if ($Preview) {
+            $items = @($all | ForEach-Object {
+                @{ From = $_.From; To = $_.To; Renamed = $_.Renamed; Why = $_.Why }
+            })
+            (@{ Time = (Get-Date).ToString('s'); Skipped = $skipped; Items = $items } |
+                ConvertTo-Json -Depth 4) |
+                Set-Content -LiteralPath $PreviewFile -Encoding UTF8
+            Write-DeskOrgLog "Preview finished. WouldMove=$($all.Count) Skipped=$skipped"
+            Write-Host "Preview: $($all.Count) file(s) would move, $skipped left alone."
+            foreach ($i in $all) { Write-Host "  $($i.From)  ->  $($i.To)   [$($i.Why)]" }
+            return
+        }
+
+        $moves = @()
+        $failed = 0
+        $created = @()
+        $done = 0
+        foreach ($i in $all) {
+            $done++
+            Set-Progress 'Moving' $done $all.Count ([IO.Path]::GetFileName($i.From))
+            try {
+                # Re-check just before moving: the file may have gone or the name been taken.
+                if (-not (Test-Path -LiteralPath $i.From -PathType Leaf)) { continue }
+                if (-not (Test-Path -LiteralPath $i.Folder -PathType Container)) {
+                    # Remember every folder we have to create (category and dated sub-folder).
+                    $walk = $i.Folder
+                    while ($walk -and -not (Test-Path -LiteralPath $walk -PathType Container)) {
+                        if ($created -notcontains $walk) { $created += $walk }
+                        $walk = Split-Path -Parent $walk
+                    }
+                    New-Item -ItemType Directory -Path $i.Folder -Force -ErrorAction Stop | Out-Null
                 }
-
-                $destination = Join-Path $source $category
-                if (-not (Test-Path -LiteralPath $destination -PathType Container)) {
-                    New-Item -ItemType Directory -Path $destination -ErrorAction Stop |
-                        Out-Null
+                $target = $i.To
+                if (Test-Path -LiteralPath $target) {
+                    $target = Get-UniqueDestination -Directory $i.Folder -FileName ([IO.Path]::GetFileName($i.From)) -Planned $null
                 }
-
-                $target = Get-UniqueDestination -Directory $destination -FileName $file.Name
-
                 # File.Move does not overwrite an existing target.
-                [System.IO.File]::Move($file.FullName, $target)
-                Write-DeskOrgLog "MOVED: $($file.FullName) -> $target"
-                $moved++
+                [System.IO.File]::Move($i.From, $target)
+                Write-DeskOrgLog "MOVED: $($i.From) -> $target"
+                $moves += @{ From = $i.From; To = $target; Why = $i.Why }
             }
             catch {
-                Write-DeskOrgLog "ERROR: '$($file.FullName)': $($_.Exception.Message)"
+                Write-DeskOrgLog "ERROR: '$($i.From)': $($_.Exception.Message)"
+                $failed++
+            }
+        }
+        Clear-Progress
+
+        # Keep a record of this run so it can be undone.
+        if ($moves.Count -gt 0) {
+            if (-not (Test-Path -LiteralPath $RunsFolder)) {
+                New-Item -ItemType Directory -Path $RunsFolder -Force | Out-Null
+            }
+            $runFile = Join-Path $RunsFolder ('run-{0}.json' -f (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
+            (@{ Time = (Get-Date).ToString('s'); Auto = [bool]$Auto; Created = $created; Moves = $moves } |
+                ConvertTo-Json -Depth 5) |
+                Set-Content -LiteralPath $runFile -Encoding UTF8
+            # Keep the newest 60 records.
+            Get-ChildItem -LiteralPath $RunsFolder -Filter 'run-*.json' |
+                Sort-Object Name -Descending | Select-Object -Skip 60 |
+                Remove-Item -Force -ErrorAction SilentlyContinue
+        }
+
+        Write-DeskOrgLog "Scan finished. Moved=$($moves.Count) Skipped=$skipped Failed=$failed"
+        Save-LastRun @{ Action = 'organize'; Moved = $moves.Count; Skipped = $skipped; Failed = $failed }
+        if ($Auto -and $moves.Count -gt 0) {
+            $msg = switch (Get-Language) {
+                'hi' { "{0} फ़ाइलें व्यवस्थित की गईं। पूर्ववत करने के लिए DeskOrg खोलें।" }
+                'pa' { "{0} ਫ਼ਾਈਲਾਂ ਸੰਭਾਲੀਆਂ ਗਈਆਂ। ਵਾਪਸ ਕਰਨ ਲਈ DeskOrg ਖੋਲ੍ਹੋ।" }
+                default { "{0} file(s) tidied. Open DeskOrg to undo." }
+            }
+            Show-Toast 'DeskOrg' ($msg -f $moves.Count)
+        }
+    }
+    finally {
+        Clear-Progress
+        if ($locked) { $mutex.ReleaseMutex() }
+        $mutex.Dispose()
+    }
+}
+
+function Invoke-Undo {
+    $mutex = New-Object System.Threading.Mutex($false, 'Local\DeskOrgOrganizer')
+    $locked = $false
+    try {
+        try { $locked = $mutex.WaitOne(0) }
+        catch [System.Threading.AbandonedMutexException] { $locked = $true }
+        if (-not $locked) { throw 'A scan is running right now. Try again in a moment.' }
+
+        $run = $null
+        if ($Run) {
+            $candidate = Join-Path $RunsFolder ([IO.Path]::GetFileName($Run))
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) { $run = Get-Item -LiteralPath $candidate }
+        }
+        elseif (Test-Path -LiteralPath $RunsFolder) {
+            $run = Get-ChildItem -LiteralPath $RunsFolder -Filter 'run-*.json' |
+                Where-Object { $_.Name -notlike '*.undone.json' } |
+                Sort-Object Name -Descending | Select-Object -First 1
+        }
+        if (-not $run -or $run.Name -like '*.undone.json') {
+            Write-Host 'There is nothing to undo.'
+            Write-DeskOrgLog 'Undo: nothing to undo.'
+            Save-LastRun @{ Action = 'undo'; Restored = 0; Missing = 0; Failed = 0; Nothing = $true }
+            return
+        }
+
+        $data = Get-Content -LiteralPath $run.FullName -Raw | ConvertFrom-Json
+        $all = @($data.Moves)
+        $todo = if ($File) { @($all | Where-Object { $_.To -eq $File }) } else { $all }
+        $restored = 0; $missing = 0; $failed = 0
+        $handled = @()
+        foreach ($m in $todo) {
+            try {
+                if (-not (Test-Path -LiteralPath $m.To -PathType Leaf)) { $missing++; $handled += $m.To; continue }
+                $dir = Split-Path -Parent $m.From
+                if (-not (Test-Path -LiteralPath $dir -PathType Container)) { $missing++; continue }
+                $back = $m.From
+                if (Test-Path -LiteralPath $back) {
+                    $back = Get-UniqueDestination -Directory $dir -FileName ([IO.Path]::GetFileName($m.From)) -Planned $null
+                }
+                [System.IO.File]::Move($m.To, $back)
+                Write-DeskOrgLog "UNDONE: $($m.To) -> $back"
+                $restored++
+                $handled += $m.To
+            }
+            catch {
+                Write-DeskOrgLog "UNDO ERROR: '$($m.To)': $($_.Exception.Message)"
                 $failed++
             }
         }
 
-        Write-DeskOrgLog "Scan finished. Moved=$moved Skipped=$skipped Failed=$failed"
+        # Remove folders this run created, only if they are now empty.
+        foreach ($c in @($data.Created) | Sort-Object { $_.Length } -Descending) {
+            try {
+                if ($c -and (Test-Path -LiteralPath $c -PathType Container) -and
+                    -not (Get-ChildItem -LiteralPath $c -Force)) {
+                    Remove-Item -LiteralPath $c -Force
+                }
+            } catch { }
+        }
+
+        if ($File) {
+            # One file put back: take it out of the record; the run is "undone" when none is left.
+            $left = @($all | Where-Object { $_.To -notin $handled })
+            if ($left.Count -eq 0) {
+                Rename-Item -LiteralPath $run.FullName -NewName ($run.BaseName + '.undone.json') -Force
+            }
+            else {
+                (@{ Time = $data.Time; Auto = $data.Auto; Created = @($data.Created); Moves = $left } |
+                    ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $run.FullName -Encoding UTF8
+            }
+        }
+        else {
+            # Mark the record as used so the next undo goes one run further back.
+            Rename-Item -LiteralPath $run.FullName -NewName ($run.BaseName + '.undone.json') -Force
+        }
+        Write-DeskOrgLog "Undo finished. Restored=$restored Missing=$missing Failed=$failed"
+        Write-Host "Undo: $restored file(s) put back, $missing could not be found, $failed failed."
+        Save-LastRun @{ Action = 'undo'; Restored = $restored; Missing = $missing; Failed = $failed }
     }
     finally {
         if ($locked) { $mutex.ReleaseMutex() }
@@ -288,26 +712,82 @@ function Invoke-DeskOrg {
     }
 }
 
+function Invoke-FindDuplicates {
+    # Groups identical files (same size, then same SHA-256). Changes nothing.
+    $rules = Get-Rules
+    $roots = @(Resolve-SourcePath $rules.SourceFolder)
+    foreach ($e in $rules.ExtraFolders) {
+        try { $roots += (Resolve-SourcePath $e.Path) } catch { }
+    }
+    $roots = @($roots | Select-Object -Unique)
+    Write-DeskOrgLog "Duplicate search started: $($roots -join '; ')"
+
+    $files = @()
+    foreach ($r in $roots) {
+        $files += @(Get-ChildItem -LiteralPath $r -File -Recurse -Force -ErrorAction SilentlyContinue |
+            Where-Object { $_.Length -gt 0 -and
+                -not ($_.Attributes -band ([IO.FileAttributes]::Hidden -bor [IO.FileAttributes]::System)) })
+        if ($files.Count -gt 50000) { break }
+    }
+    $bySize = $files | Group-Object Length | Where-Object { $_.Count -gt 1 }
+    $candidates = @($bySize | ForEach-Object { $_.Group })
+    $groups = @()
+    $n = 0
+    $hashes = @{}
+    foreach ($f in $candidates) {
+        $n++
+        if ($n % 5 -eq 0) { Set-Progress 'Comparing' $n $candidates.Count $f.Name }
+        try {
+            $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256 -ErrorAction Stop).Hash
+            $key = "$($f.Length)|$h"
+            if (-not $hashes.ContainsKey($key)) { $hashes[$key] = @() }
+            $hashes[$key] += $f
+        } catch { }
+    }
+    foreach ($key in $hashes.Keys) {
+        $g = @($hashes[$key])
+        if ($g.Count -gt 1) {
+            $groups += @{
+                Size = $g[0].Length
+                Files = @($g | Sort-Object LastWriteTime | ForEach-Object {
+                    @{ Path = $_.FullName; Modified = $_.LastWriteTime.ToString('s') }
+                })
+            }
+        }
+    }
+    $groups = @($groups | Sort-Object { $_.Size * ($_.Files.Count - 1) } -Descending)
+    (@{ Time = (Get-Date).ToString('s'); Scanned = $files.Count; Groups = $groups } |
+        ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $DupFile -Encoding UTF8
+    Clear-Progress
+    Write-DeskOrgLog "Duplicate search finished. Files=$($files.Count) Groups=$($groups.Count)"
+    Write-Host "Found $($groups.Count) group(s) of identical files among $($files.Count) file(s)."
+}
+
 try {
     Add-Content -LiteralPath $LogFile -Encoding UTF8 -Value (
         "`r`n==========================================`r`n" +
-        "DeskOrg scan requested: $(Get-Date)`r`n" +
+        "DeskOrg run requested: $(Get-Date)`r`n" +
         'Designed & Developed by: Nivesh Sahayak - https://www.niveshsahayak.in'
     )
-    Invoke-DeskOrg
+    if ($FindDuplicates) { Invoke-FindDuplicates }
+    elseif ($Undo) { Invoke-Undo }
+    else { Invoke-DeskOrg }
     exit 0
 }
 catch {
     try { Write-DeskOrgLog "FATAL ERROR: $($_.Exception.Message)" } catch {}
+    try { Save-LastRun @{ Action = 'error'; Error = $_.Exception.Message } } catch {}
+    try { Clear-Progress } catch {}
     Write-Error $_
     exit 1
 }
 
+
 # SIG # Begin signature block
 # MIIcOAYJKoZIhvcNAQcCoIIcKTCCHCUCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCALhBmilnn4coUZ
-# EGGN/G/bCDCAo8TcaM1vY+oFiSSJe6CCFm4wggMwMIICGKADAgECAhBAfeExfrxD
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAMQcStt1KrURI6
+# +3AnEV9jXfej4w2FFlfG6zMZPOT2HaCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
 # qU1Saw4d1EDgMA0GCSqGSIb3DQEBCwUAMDAxLjAsBgNVBAMMJURlc2tPcmcgQ29k
 # ZSBTaWduaW5nIChOaXZlc2ggU2FoYXlhaykwHhcNMjYxMDMwMDEwMDQ5WhcNMzYx
 # MDMwMDExMDQ5WjAwMS4wLAYDVQQDDCVEZXNrT3JnIENvZGUgU2lnbmluZyAoTml2
@@ -431,28 +911,28 @@ catch {
 # aWduaW5nIChOaXZlc2ggU2FoYXlhaykCEEB94TF+vEOpTVJrDh3UQOAwDQYJYIZI
 # AWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0B
 # CQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAv
-# BgkqhkiG9w0BCQQxIgQgDj3gG+9Uz3fA2wpI/N4QL9HvQWG3bCb0iyPwHamzSSIw
-# DQYJKoZIhvcNAQEBBQAEggEAS370pUQ/sCHpI5UF9NlIFGyzm4VHS7b4eP4ZjuvM
-# 0Lfj7zry59WAlKNaPz7JIq8Yfj3D5h5m+PRAX4Rzu3CnGy5EuecGqpKXyYfGaw52
-# fUTjKFPeOpgMzCAx2xSwbJATKiv/3/Kk5teOcKOB+C/HFtVo//g9ieBfBuoaT4ic
-# 56UNfs+KuxPl1Fm17fk10vMzv6SCK7s18T8SbZNnEEBFRU0jFy6Ojrym5J71vMCA
-# AndgvXrVy51dO0015EgH+kHt4DyeDNPrYjqfZUcu2q2+3AP2t7INZ6yqX08suGda
-# N/ODra9kB2UYBB1uQp/uKAfxRd+9zpXuAWRPoyhFUMddV6GCAyYwggMiBgkqhkiG
+# BgkqhkiG9w0BCQQxIgQg8ltnSR9dhO3hZPrY6D9/gGfEeACpqAojCYYANEGMecQw
+# DQYJKoZIhvcNAQEBBQAEggEAViwMvyWuocx6gD39uFiRIFseQlxDknYxEkM0pm8r
+# Y4A3mhobINtjOyTAtjk9OafIwHqFhgwD0aLTSCLCFGHkoJDz1Rxx5HjnRF2Rge2P
+# 3bm4cnIl1+DRJOtV8BODmKlX2cfuNCwVyTLXLeMivIh+GCAulIXLDk1n7ZbNAQHJ
+# nzDDP7DxUaT85or6Zw/EHoaRR3QjoJtVVG2M79uN6l4ODI8Fy8koVy9AUT58BDuq
+# SdKaw/70e2XJ7J/OWQGE1TcxFoW1aaQTK0gyoWaZz6KQaiNJH0QdFgX44DFPhRG2
+# w5LJ8e4/TC3Gnqvou5qgGJ9R16UnqAOFVh2cUELx83mpeqGCAyYwggMiBgkqhkiG
 # 9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdp
 # Q2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBUaW1lU3Rh
 # bXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNPfkVO28MPj/mSGDUw
 # DQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
-# SIb3DQEJBTEPFw0yNjEwMzAwMzE5MTdaMC8GCSqGSIb3DQEJBDEiBCB12oZgGTOx
-# 9jD1DgXdgLaWNeC5WPdf9cX3miXqhAcbJTANBgkqhkiG9w0BAQEFAASCAgCLvIos
-# JEs5LTn0t2E/9x/SenitY5xYZ4/xvAkHcXDgaFCTxPxNKgtBzMGlnjPFhezt7Klo
-# yuKCIU1Pbi7DfOTFS16GEGYpoMeu5GGjWF4R9IMxBWBBDDRy1nwrOiN0F7ycFt8B
-# Kh1sDnKn1CJuPg0VgZ2we7Z13cCU1jPwNwAEdPqerJSIkMezmrqbD2+TIlleySpr
-# yztJGSOoPulsj0nDbDIZ8mIjS77hmbjcGvi552OAsSVJa0+oeJH1UQzpt1yby6+e
-# 9f4/tWfssk60jFVnA+ryjEPNyYF67ViD5Re9LareG5qP0gTJoq8EJ3oZMsGD1taH
-# pDTA/4K814UJcNDxqz3ttngQivBERrRx9y3VZv+yF5J1gBUsTmvO+0txUBu6/ATy
-# 5v2YHUDALJ+EBsNgzpSJqI3/f9+5mwjYBQTy6LQk80EmpxcEZjaf6Gkb7jRH6vxV
-# vTNz5cIjVOBR/NQRMBv3vr2Kv6N99weIa45lX6BgZS0WwuYiun/kf42ZGKquI121
-# xanwy+U7n+lA6PNTKfQdr9ol/vEBIxZGF3z61Qgwcv9kDRBNzIt9Ng0iJuepHDBQ
-# wUWkg+bYcmH6Ye/j7+EsDLgYFOW6bia3y5ZUAcos5pnvu6L1Djw6VovB4E7IfkQC
-# rn15BKYXiWQovVEZNYGg9z2AKWWZuJP7H7IhqA==
+# SIb3DQEJBTEPFw0yNjExMTMwMjM4MDRaMC8GCSqGSIb3DQEJBDEiBCCQN2EljjyB
+# gXWrSIrb/HcmBNuV1VmbjhrZYj1o4ilCQDANBgkqhkiG9w0BAQEFAASCAgBkZO9v
+# sI/jVQUVV43AWV3Cwgp49iPWK/0389z3wBlC/t9EQThnt7S1vXVt5/xZqbvWtSvg
+# fHDQsPmgMIp3JqZNzWa0C+BxyLd61VT7PdBHqDvPHoZPXMP2HkRl7drIXtAs9BqT
+# MWd81em//5tR309jgSUaozhkegby6L8r5tbP97Gvt4aQEVv5M5f/8N6433l2nae/
+# 8vN3qruZxFy7pYnU4+sgaDZl46h03TRjftjU+mH/Mo89isYJclmh3ArMb5hrUYNJ
+# U7kJ0AChvKM25bPq79+24aiVMvZky6b1HdKeY3690m/DDVXVNpK5dOVOuPpZ/ela
+# nOfFEvBVA+5l43pmsNlHcN48nCWq8GW6jSRreycnfgksoPV6uoLNRtbDElWG3dtK
+# x91nbAkodUq8Q07WKOUuiBexTwG/XJiIhlNoJ6v9y8dBMKh1OgB/2jJ2UPHkryTX
+# 9P6BScUjMnYrjcwkGKKDT9Wc1o4IdGWAZGKvk8kNS8ooKbfE5TEIM4ntYEapGCQH
+# EMNUKCjhCBGxhHtNAlN1a+o1+sqbPI9ncAhZ+RNprJ4+CoKXftsCGVheA9llOD+p
+# U88HcFhr9nr0yuk+qI7a0w/I8WIS+EVVHrnqoVrouW+A7sAGf/7KCpiUUYx93YEu
+# Xyy4S4NQtNnE91pVumEJkBcSiSAwZ02o7+NTLw==
 # SIG # End signature block

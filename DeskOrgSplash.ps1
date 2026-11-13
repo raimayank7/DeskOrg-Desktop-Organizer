@@ -1,4 +1,4 @@
-
+﻿
 # DeskOrgSplash.ps1
 # Five-second credits splash, followed by the permanent Control Center.
 
@@ -99,10 +99,29 @@ $window.Add_Closed({ $timer.Stop() })
 $timer.Start()
 [void]$window.ShowDialog()
 
+# Upgrade an older Smart Automation task (it launched the watcher with a visible
+# console window) to the hidden launch. Only when the task already exists.
+try {
+    $oldTask = Get-ScheduledTask -TaskName 'DeskOrg Smart Automation' -ErrorAction SilentlyContinue
+    $automation = Join-Path $AppFolder 'DeskOrgAutomation.ps1'
+    # Only a task that belongs to THIS folder is touched (never one of another install,
+    # and never from a development copy of DeskOrg).
+    $sameFolder = $oldTask -and ([string]$oldTask.Actions[0].WorkingDirectory).TrimEnd('\') -eq ([string]$AppFolder).TrimEnd('\')
+    if ($oldTask -and $sameFolder -and $oldTask.State -ne 'Disabled' -and
+        $oldTask.Actions[0].Execute -notmatch 'conhost' -and
+        (Test-Path -LiteralPath $automation)) {
+        & $automation Install | Out-Null
+    }
+} catch { }
+
 # Continue to the persistent Control Center after the splash closes.
 if (Test-Path -LiteralPath $ControlCenter) {
-    Start-Process -FilePath 'powershell.exe' -ArgumentList @(
-        '-NoProfile',
+    # conhost --headless: no console window at all (a plain powershell.exe
+    # shows an empty Windows Terminal window on Windows 11).
+    Start-Process -FilePath 'conhost.exe' -ArgumentList @(
+        '--headless',
+        'powershell.exe',
+        '-NoLogo', '-NoProfile', '-STA',
         '-ExecutionPolicy', 'AllSigned',
         '-File',
         "`"$ControlCenter`""
@@ -115,11 +134,13 @@ if (Test-Path -LiteralPath $ControlCenter) {
         'Error'
     ) | Out-Null
 }
+
+
 # SIG # Begin signature block
 # MIIcOAYJKoZIhvcNAQcCoIIcKTCCHCUCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCB45a8onGWej+uB
-# 1PA/4j2nbphKrIXmJVZS5iTmJhusZqCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBkq2QM5Gu77ctm
+# AEUxzG+ygm2PieqcMv68gpX9/CFjG6CCFm4wggMwMIICGKADAgECAhBAfeExfrxD
 # qU1Saw4d1EDgMA0GCSqGSIb3DQEBCwUAMDAxLjAsBgNVBAMMJURlc2tPcmcgQ29k
 # ZSBTaWduaW5nIChOaXZlc2ggU2FoYXlhaykwHhcNMjYxMDMwMDEwMDQ5WhcNMzYx
 # MDMwMDExMDQ5WjAwMS4wLAYDVQQDDCVEZXNrT3JnIENvZGUgU2lnbmluZyAoTml2
@@ -243,28 +264,28 @@ if (Test-Path -LiteralPath $ControlCenter) {
 # aWduaW5nIChOaXZlc2ggU2FoYXlhaykCEEB94TF+vEOpTVJrDh3UQOAwDQYJYIZI
 # AWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0B
 # CQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAv
-# BgkqhkiG9w0BCQQxIgQgCC9Jr3YwJdfhkxUBclpIkIrND2Hz6GAuyVtjKuUjpJYw
-# DQYJKoZIhvcNAQEBBQAEggEAtKXWq7IF/1u8fqAPwVwqKMvF7XkvM3l9ebb5pACn
-# 9GGGSZdX/gjPsCPvDfN0j7JuUuGbLQzhMZZUlXbEe2l9Lm0UYEZpvTH44Fc+O+Yb
-# tF4oAsbCOGy6aO6wQe9YNxWzGIzoHAR1jWwaMCQ2Cn4DZEUiq6FzSLrxxT8cfnBk
-# 38nd41R7049VTuwQs4mWpvlX2Nq2yQIJR/4Bz5s3Lp32rm5rW7pfPLgc98irPcKJ
-# anD/42qr488B/V8Znc7lggw6t+iwCIwgjgbo/ZMK3O64JiEwVzzkTFA9l2NcuwD/
-# qJgjRPD6L/2LnGEaT0XFVhzD6To7gFs2yFz6ehSWAiVSJaGCAyYwggMiBgkqhkiG
+# BgkqhkiG9w0BCQQxIgQgma5flclwQHzH9oP0oYAICD3c2P/siJAgYgXWGjZfY8ow
+# DQYJKoZIhvcNAQEBBQAEggEAVpBD6ET+smBe1QMK29zbqmpxeDZNoK1dM1CGHF5F
+# Tj5rPgr0gVgbjeLjt+2jkS/dsWnOwn87KGctjXBUm2Wl4Wi71ZUsiiM+K6MFOIkC
+# z+8/xAC13RPaeWjFs1H5kzRohHuvzxqNYiilrwqfK44JuPZLjxN0FSh7n80doiuW
+# jJngEL4oD2zgGZI4jr2Ulo0meIUh5x9ao4L/WPvIhugD1XTseJE3vsRKYh/5hW+p
+# 3E5JlcbM6aV8GrFlxHs5AfT/9Aiheo5a369NWiasn9IlZzPJKA+SIBUK3LMXV6DM
+# MNek7/NKFGZtRA9MxA/jIeEinrpFZglvZBsFTHv2mwubJqGCAyYwggMiBgkqhkiG
 # 9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdp
 # Q2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBUaW1lU3Rh
 # bXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNPfkVO28MPj/mSGDUw
 # DQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
-# SIb3DQEJBTEPFw0yNjEwMzAwMzE5MThaMC8GCSqGSIb3DQEJBDEiBCBUhgrOeba3
-# IvhPhdVBbERP9MxKVx35Q5Hc+Pl0Q5KF3TANBgkqhkiG9w0BAQEFAASCAgA270ih
-# /snOQTAaUBV3UL4+JPgAlJTQmbOC0hORE4MIrrgtGW+Y38JoT+Ik8g3DTgfcpcka
-# 5HyBtvLCTlrYeFop6UO3xDDST8MAWd1YbhuDD+ovWNw8NKl6K18B9For3KVusQQ/
-# GUaKerudLY6hvzStl/oJx1eqUvOGCj+5Un/ERPw/a/Iz00dsIQUb5E5yi3NG95O+
-# 0HJtpaNFS3mpJkPRLzqpe4b/1T/2sAeJu4kfQ+3SQZfmU7wnwChDVuGHJ0QQMGC3
-# Jiow36pUuySAaetAgzRJ+2a4tTDet/SjM0EGELueZLLvIT9/cQ/MIfVAUORhwiNP
-# 2yF/5c1Px8r6M/f8ch7cVCot6WaRNNpcZD1GvRYZEjm/u1Eq/4iwaYyzqrKwhAmQ
-# iXmVBo54QmVBir0po1Rnxt/A/KfOOwjsVlH6jklTK80c/s4qdXGhhUMBioXaIhZc
-# mdyVyjdhbEcs+FfkpvxtXzGjIT4IOAR6s1CxYj/2mxGVJ2ekOUAFFt9OIZ+UrfZn
-# uPeqK+hwcnTPHAqlbuo/oDjCnIH2q+nJAwKi4ecZma+jmRx7kqX/MOHr0JmS1s0u
-# GBHNcrKKZE79ew5Ng5mk+6AP6+tIGZ6LzijIy1t1IsQXkKAzi2nuirFrhscxb1Mx
-# +oTyK2TgmceFxllwSz/5sv1MuSEI4rTsdvl0SA==
+# SIb3DQEJBTEPFw0yNjExMTMwMjM4MDVaMC8GCSqGSIb3DQEJBDEiBCCP6BvqchoR
+# L3l/QfcU6O9WHAjC0ZuHIfAS2IvIk2oIQjANBgkqhkiG9w0BAQEFAASCAgA3re9h
+# 2b4KxFqT1mPN7PAvTJstsOl++P8DuQ7TfvKva01UYEAQUvQx5bLWVTWQV5Sr8V2W
+# jdt7AdrTn9e7V45qGy07JUTKOoo9H87Q+nsO7ZuY8zdIwZIYB5FDI7libXq4kIny
+# NxOnVvXeYdBjH7Y+3cKjPWpDaLfvdfPOyrErx15i6/A3NDUST8Zp13xujpmqvBge
+# P/O6QfLQE2kTECbZNUnp8O0pOM1moi9uixCwdGZD/vc1OnZj6LMygxDB9tLl4+sO
+# 8a3KWorY29Dds3pFc1p8A4FQKNfR4dkgF5JaRkwM/ei/YKMMQx+Hd75FBK15SGXs
+# LtMd0CgPJyjBywMju40/DqWcR3DZm43dBEdDmqAPa6TTLeVUk2ibQ37ATxTmyMnG
+# 7EL5EeSU4vjWnBUL1M7/36QDwUBU/v6sxHCLgohEZ2W0DgWtDfx+zWuAOJ0/u58p
+# yc1N4ObZ7ZJUfm0f9WqQhSuvCUI3kkyKgJnTL6FaoWoNiWCwqifnBztt84x98Tp7
+# bf4nMIPHavgCi6QuFWuhVzgdsMyKHWhvyplggiNXsbc/yzpKQgcGxKdW1nqhg4Fz
+# GB1/tSzrzzUEuzb12FTI9gHEHF7KGWXzv0oM9XqRbPA8p0Ie3wERUYM5xJPA9z8r
+# BDRPEAxrxmia+wXMT0+3u3BTkejavOj5QZzTQw==
 # SIG # End signature block

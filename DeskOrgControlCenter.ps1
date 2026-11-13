@@ -1,4 +1,4 @@
-
+﻿
 #requires -Version 5.1
 # ==========================================================
 # DeskOrg Control Center | Modern WPF UI
@@ -33,6 +33,11 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
+# Extra features: preview, undo, rules editor, tray icon, update check.
+. (Join-Path $AppFolder 'DeskOrgExtras.ps1')
+# Only one Control Center at a time: a second start brings the open one forward.
+if (-not (Enter-SingleInstance)) { exit 0 }
+
 # ---------------- THEME ----------------
 
 $script:C = @{
@@ -49,6 +54,9 @@ $script:C = @{
     Blue       = '#49A6FF'
     Red        = '#FF5C9A'
 }
+
+# High-contrast option (setting from the Where files go page)
+Apply-Appearance
 
 # Bundled display font (Unbounded) with graceful fallback to Segoe UI
 try {
@@ -212,15 +220,15 @@ function New-ActionButton {
     $b.Padding = '13,11'
     $b.Margin = '0,0,0,9'
     $b.HorizontalContentAlignment = 'Stretch'
-    $b.Background = if ($Primary) { New-Grad @('#149B86','#5A49C7','#B83B78') @(0.0,0.55,1.0) } else { $script:C.Panel2 }
+    $b.Background = if ($Primary) { '#123A35' } else { $script:C.Panel2 }
     $b.Foreground = if ($Primary) { '#FFFFFF' } else { $script:C.Text }
-    $b.BorderBrush = if ($Primary) { 'Transparent' } else { $script:C.Border }
+    $b.BorderBrush = if ($Primary) { $script:C.Teal } else { $script:C.Border }
     $b.BorderThickness = '1'
     $b.Cursor = [System.Windows.Input.Cursors]::Hand
     # Smooth-looking hover effect without hiding text
 $b.Add_MouseEnter({
     if ($Primary) {
-        $this.Background = New-Grad @('#1BB8A0','#6E5CE0','#D44E8E') @(0.0,0.55,1.0)
+        $this.Background = '#18504A'
     } else {
         $this.Background = '#15463E'
         $this.BorderBrush = $script:C.Teal
@@ -229,7 +237,7 @@ $b.Add_MouseEnter({
 
 $b.Add_MouseLeave({
     if ($Primary) {
-        $this.Background = New-Grad @('#149B86','#5A49C7','#B83B78') @(0.0,0.55,1.0)
+        $this.Background = '#123A35'
     }
     else {
         $this.Background = $script:C.Panel2
@@ -252,8 +260,8 @@ $b.Add_MouseLeave({
 
     $b.Content = $s
 if ($Primary) {
-    Set-DeskOrgButtonStyle -Button $b -NormalBackground '#10332E' -NormalBorder 'Transparent' -KeepBackground
-    $b.Background = New-Grad @('#2FE6C8','#8C7BFF','#FF5C9A') @(0.0,0.6,1.0)
+    # Calm main button: dark teal with a teal outline (the old bright gradient was tiring to look at).
+    Set-DeskOrgButtonStyle -Button $b -NormalBackground '#123A35' -NormalBorder $script:C.Teal
 } else {
     Set-DeskOrgButtonStyle -Button $b -NormalBackground $script:C.Panel2 -NormalBorder $script:C.Border
 }
@@ -285,6 +293,13 @@ function Add-Action {
 }
 
 function Show-Message {
+    # Messages now use DeskOrg's own dark dialog (see DeskOrgExtras.ps1).
+    param([string]$Message, [string]$Title = 'DeskOrg', $Icon = $null)
+    $warn = ($Icon -eq [System.Windows.MessageBoxImage]::Warning -or $Icon -eq [System.Windows.MessageBoxImage]::Error)
+    [void](Show-Dialog -Message $Message -Title $Title -Warn:$warn)
+}
+
+function Show-MessageOld {
     param(
         [string]$Message,
         [string]$Title = 'DeskOrg',
@@ -377,13 +392,8 @@ function Invoke-Organizer {
     }
 
     try {
-        Start-Process `
-            -FilePath $env:ComSpec `
-            -ArgumentList @('/c', "`"$OrganizerFile`"") `
-            -WorkingDirectory $AppFolder `
-            -ErrorAction Stop
-
-        Set-Status 'Organizer launched.'
+        # Runs hidden in the background and tells the user what happened.
+        Invoke-OrganizeNow
     }
     catch {
         Show-Message (
@@ -490,31 +500,35 @@ function Navigate-To {
 
     switch ($Page) {
         'Home' {
-            $script:PageTitle.Text = 'Welcome back.'
-            $script:PageSubtitle.Text = 'Your desktop. Your flow. Everything in its place.'
+            $script:PageTitle.Text = T 'title.Home'
+            $script:PageSubtitle.Text = T 'sub.Home'
             Build-HomePage
+            # The privacy note goes at the bottom of the home page.
+            if ($script:PageHost.Children.Count -gt 0) { Add-PrivacyCard $script:PageHost.Children[$script:PageHost.Children.Count - 1] }
         }
         'Organize' {
-            $script:PageTitle.Text = 'Organize'
-            $script:PageSubtitle.Text = 'Your desktop cleanup tools, all in one place.'
+            $script:PageTitle.Text = T 'title.Organize'
+            $script:PageSubtitle.Text = T 'sub.Organize'
             Build-OrganizePage
         }
         'Automation' {
-            $script:PageTitle.Text = 'Smart automation'
-            $script:PageSubtitle.Text = 'Choose how DeskOrg watches and maintains your desktop.'
+            $script:PageTitle.Text = T 'title.Automation'
+            $script:PageSubtitle.Text = T 'sub.Automation'
             Build-AutomationPage
         }
         'Settings' {
-            $script:PageTitle.Text = 'Rules & settings'
-            $script:PageSubtitle.Text = 'Customize file categories and inspect your configuration.'
+            $script:PageTitle.Text = T 'title.Settings'
+            $script:PageSubtitle.Text = T 'sub.Settings'
             Build-SettingsPage
         }
         'Activity' {
-            $script:PageTitle.Text = 'Activity'
-            $script:PageSubtitle.Text = 'Open the activity log and review your current setup.'
+            $script:PageTitle.Text = T 'title.Activity'
+            $script:PageSubtitle.Text = T 'sub.Activity'
             Build-ActivityPage
         }
     }
+
+    Add-UpdateBanner
 }
 
 # ---------------- PAGE LAYOUT HELPERS ----------------
@@ -580,29 +594,29 @@ function Build-HomePage {
 
     $items = @(
         @{
-            Title = 'Organize'
-            Desc = 'Sort and manage desktop files.'
+            Title = (T 'nav.Organize')
+            Desc = (T 'home.org.d')
             Accent = $script:C.Teal
             Page = 'Organize'
             Icon = '01'
         },
         @{
-            Title = 'Smart automation'
-            Desc = 'Configure watching and scheduled actions.'
+            Title = (T 'nav.Automation')
+            Desc = (T 'home.auto.d')
             Accent = $script:C.Purple
             Page = 'Automation'
             Icon = '02'
         },
         @{
-            Title = 'Rules & settings'
-            Desc = 'Edit your saved organization rules.'
+            Title = (T 'nav.Settings')
+            Desc = (T 'home.set.d')
             Accent = $script:C.Amber
             Page = 'Settings'
             Icon = '03'
         },
         @{
-            Title = 'Activity & logs'
-            Desc = 'Review activity and configuration health.'
+            Title = (T 'nav.Activity')
+            Desc = (T 'home.hist.d')
             Accent = $script:C.Blue
             Page = 'Activity'
             Icon = '04'
@@ -736,13 +750,31 @@ Set-DeskOrgButtonStyle -Button $card `
 function Build-OrganizePage {
     $root = New-PageStack
 
-    $intro = New-Card 'Desktop organization' 'Choose an action. Your existing organizer and rules remain in use.' $script:C.Teal
+    $intro = New-Card (T 'org.card') (T 'org.card.desc') $script:C.Teal
 
     Add-Action $intro `
-        'Organize Now' `
-        'Run the current DeskOrg organizer.' `
-        { Invoke-Organizer } `
+        (T 'org.preview') `
+        (T 'org.preview.d') `
+        { Show-PreviewWindow } `
         $script:C.Teal -Primary
+
+    Add-Action $intro `
+        (T 'org.now') `
+        (T 'org.now.d') `
+        { Invoke-Organizer } `
+        $script:C.Teal
+
+    Add-Action $intro `
+        (T 'org.undo') `
+        (T 'org.undo.d') `
+        { Invoke-UndoLast } `
+        $script:C.Teal
+
+    Add-Action $intro `
+        (T 'org.dups') `
+        (T 'org.dups.d') `
+        { Show-DuplicateFinder } `
+        $script:C.Teal
 
     Add-Action $intro `
         'Open desktop folder' `
@@ -796,6 +828,12 @@ function Build-AutomationPage {
         $script:C.Purple -Primary
 
     Add-Action $card `
+        'Pause / resume tidying' `
+        'Stop automatic tidying for now without turning automation off. Press again to resume.' `
+        { Set-Paused (-not (Test-Paused)) } `
+        $script:C.Purple
+
+    Add-Action $card `
         'View automation status' `
         'Inspect the current automation setup.' `
         { Invoke-Automation 'Status' } `
@@ -829,8 +867,14 @@ function Build-SettingsPage {
     $card = New-Card 'Rules & configuration' 'Change saved rules carefully. Keep a backup before making major edits.' $script:C.Amber
 
     Add-Action $card `
-        'Edit saved rules' `
-        'Open DeskOrgRules.json in Notepad.' `
+        'Open rules editor' `
+        'Choose folders, file types, dated folders and files to never move.' `
+        { Show-RulesEditor } `
+        $script:C.Amber -Primary
+
+    Add-Action $card `
+        'Edit rules file in Notepad (advanced)' `
+        'Open DeskOrgRules.json as plain text.' `
         {
             if (-not (Test-Path -LiteralPath $RulesFile -PathType Leaf)) {
                 Show-Message (
@@ -844,7 +888,7 @@ function Build-SettingsPage {
             Start-Process -FilePath 'notepad.exe' -ArgumentList "`"$RulesFile`""
             Set-Status 'Opened saved rules.'
         } `
-        $script:C.Amber -Primary
+        $script:C.Amber
 
     Add-Action $card `
         'Open application folder' `
@@ -871,13 +915,26 @@ function Build-SettingsPage {
         $script:C.Amber
 
     Add-PageCard $root $card
+    Add-LanguageAndLookCards $root
+
+    $keys = New-Card 'Keyboard shortcuts' "F1 help   -   Ctrl+P preview   -   Ctrl+O organize now   -   Ctrl+Z undo last   -   Ctrl+D duplicates   -   Ctrl+1 to Ctrl+5 switch pages" $script:C.Muted
+    [void]$root.Children.Add($keys.Border)
     [void]$script:PageHost.Children.Add($root)
 }
 
 function Build-ActivityPage {
     $root = New-PageStack
 
-    $card = New-Card 'Activity & diagnostics' 'Open the existing log and check the supporting scripts.' $script:C.Blue
+    # Readable history first: every tidy-up, with Undo and Details.
+    Add-HistoryCard $root
+
+    $card = New-Card 'Diagnostics' 'Open the log, check the supporting files, and see what changed in each version.' $script:C.Blue
+
+    Add-Action $card `
+        (T 'hist.whatsnew') `
+        "See what is new in DeskOrg $($script:AppVersion) and earlier versions." `
+        { Show-WhatsNew } `
+        $script:C.Blue
 
     Add-Action $card `
         'View DeskOrg log' `
@@ -1010,18 +1067,22 @@ $navLabel.Margin = '7,0,0,9'
 [void]$sideRoot.Children.Add($navLabel)
 
 $navItems = @(
-    @{ Key = 'Home';       Label = '01   Overview' },
-    @{ Key = 'Organize';   Label = '02   Organize' },
-    @{ Key = 'Automation'; Label = '03   Smart Automation' },
-    @{ Key = 'Settings';   Label = '04   Rules and Settings' },
-    @{ Key = 'Activity';   Label = '05   Activity and Logs' }
+    @{ Key = 'Home';       Label = ('01   ' + (T 'nav.Home')) },
+    @{ Key = 'Organize';   Label = ('02   ' + (T 'nav.Organize')) },
+    @{ Key = 'Automation'; Label = ('03   ' + (T 'nav.Automation')) },
+    @{ Key = 'Settings';   Label = ('04   ' + (T 'nav.Settings')) },
+    @{ Key = 'Activity';   Label = ('05   ' + (T 'nav.Activity')) }
 )
 
 foreach ($item in $navItems) {
 
     $b = New-Object System.Windows.Controls.Button
 
-    $b.Content = $item.Label
+    # A wrapping TextBlock so longer (translated) names fit the sidebar.
+    $navText = New-Object System.Windows.Controls.TextBlock
+    $navText.Text = $item.Label
+    $navText.TextWrapping = 'Wrap'
+    $b.Content = $navText
     $b.HorizontalContentAlignment = 'Left'
     $b.Padding = '12,12'
     $b.Margin = '0,0,0,6'
@@ -1181,7 +1242,7 @@ $exit.Template = [System.Windows.Markup.XamlReader]::Parse(@'
 '@)
 
 $exit.HorizontalAlignment = 'Right'
-$exit.Add_Click({ $Window.Close() })
+$exit.Add_Click({ $script:RealExit = $true; $Window.Close() })
 
 [System.Windows.Controls.DockPanel]::SetDock(
     $exit, [System.Windows.Controls.Dock]::Right
@@ -1295,6 +1356,19 @@ $pageScroll.Content = $script:PageHost
 
 # Add the page area after the header and footer.
 # DockPanel fills the remaining space with its last child.
+# A thin progress bar under the header, shown while DeskOrg is tidying.
+$script:ProgressBar = New-Object System.Windows.Controls.ProgressBar
+$script:ProgressBar.Height = 5
+$script:ProgressBar.Minimum = 0
+$script:ProgressBar.Maximum = 100
+$script:ProgressBar.Foreground = $script:C.Teal
+$script:ProgressBar.Background = $script:C.Panel2
+$script:ProgressBar.BorderThickness = '0'
+$script:ProgressBar.Margin = '0,0,12,8'
+$script:ProgressBar.Visibility = 'Collapsed'
+[System.Windows.Controls.DockPanel]::SetDock($script:ProgressBar, 'Top')
+[void]$content.Children.Add($script:ProgressBar)
+
 [void]$content.Children.Add($pageScroll)
 
 # ---------------- START ----------------
@@ -1305,14 +1379,19 @@ $Window.Content = $main
 # Build the home page.
 Navigate-To 'Home'
 
+# Tray icon, close-to-tray, and a quiet check for a newer version.
+Initialize-WindowBehaviour
+Start-UpdateCheck
+
 # Display DeskOrg Control Center.
 [void]$Window.ShowDialog()
+
 
 # SIG # Begin signature block
 # MIIcOAYJKoZIhvcNAQcCoIIcKTCCHCUCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDA9ZNzSkku6Y+X
-# z30nSBfbbO+hxRxZJQ41EcvmefjWa6CCFm4wggMwMIICGKADAgECAhBAfeExfrxD
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCB8N9WpZKRYTW3
+# WWlpdkArfr7M7yGVxgn821HrjeodwaCCFm4wggMwMIICGKADAgECAhBAfeExfrxD
 # qU1Saw4d1EDgMA0GCSqGSIb3DQEBCwUAMDAxLjAsBgNVBAMMJURlc2tPcmcgQ29k
 # ZSBTaWduaW5nIChOaXZlc2ggU2FoYXlhaykwHhcNMjYxMDMwMDEwMDQ5WhcNMzYx
 # MDMwMDExMDQ5WjAwMS4wLAYDVQQDDCVEZXNrT3JnIENvZGUgU2lnbmluZyAoTml2
@@ -1436,28 +1515,28 @@ Navigate-To 'Home'
 # aWduaW5nIChOaXZlc2ggU2FoYXlhaykCEEB94TF+vEOpTVJrDh3UQOAwDQYJYIZI
 # AWUDBAIBBQCggYQwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0B
 # CQMxDAYKKwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAv
-# BgkqhkiG9w0BCQQxIgQgn066YQ92Ff2IfvAZmZK8x89wnEB4U/tJZxHJANg1sfEw
-# DQYJKoZIhvcNAQEBBQAEggEAa0yfj12D61HbWjtAFSSgfPZL/ORJvoKWNNdbv6wU
-# CdnxNEv8qDS3MMUnARGQC10hCmQ3W8tsAr3lij8ZwxSOuo2jKUtmXKvQ9nX1I1Qx
-# PNldaMJJFXyA527YeRGE74aIo+MaqRDGBkkZydKfvx+hrTGRE4l1ByjQTjV1wXsQ
-# IiGb8bcqi0L3LcnbqmwIhnIktjPCg4eU4gG7hGEJChqkiIgvf1/mf1vVoWjTcCdC
-# Q/wbp+mJSQRCUJOCm15PsMUOUZFCFlmlcsi9kycVy6EW44ylnR2zvDtXfRowswHF
-# Nh+3V6YKIfUFIqaratIsrLPaFbgm6WQ6d2Qt2PPjDbcxCaGCAyYwggMiBgkqhkiG
+# BgkqhkiG9w0BCQQxIgQglnAaAEQpjX8wI896sUBEd433Tjhq+PJS6LLeepY7R3gw
+# DQYJKoZIhvcNAQEBBQAEggEAE0Fjt4EsnS/cGU0tWdwYcYcojk24QtaIszfnb6Br
+# q/RvUAaBvl144/4WWnmdGcYU5a1aKalx0Y92otVvuAOhK/kvlx7FGoxBd17+Ev/Q
+# 1oplqyqTfePi3HF473KGlaFItfIBuzpeeU0IJIxD0CshCNFnzsaf3NsW6uhfXJ3r
+# b3hRMay+yGj5ECdcdfxsG5STRZmrGrZtxYHGXmAokv+FQIvUwWhyl64z4ylZ30f3
+# FBT6ERBnDewihOu/kPfpYNEFN9I14wJuAEdfwq+vUkRD5Pi/5r37Lbxn+GF2tqb2
+# 7Z9D0xXroiefxe//SRcXcY1CfHaGSbRnoZ3+S9Jg5slEuaGCAyYwggMiBgkqhkiG
 # 9w0BCQYxggMTMIIDDwIBATB9MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdp
 # Q2VydCwgSW5jLjFBMD8GA1UEAxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBUaW1lU3Rh
 # bXBpbmcgUlNBNDA5NiBTSEEyNTYgMjAyNSBDQTECEAhP3DNPfkVO28MPj/mSGDUw
 # DQYJYIZIAWUDBAIBBQCgaTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
-# SIb3DQEJBTEPFw0yNjEwMzAwMzE5MTdaMC8GCSqGSIb3DQEJBDEiBCDA/RZhUqin
-# GockEyKysshV2wJcJAenQJb4EDQ6aWTnOTANBgkqhkiG9w0BAQEFAASCAgABgjYN
-# unwEidX2iJhuzk6g0zgHqF2iecYiLtzo9zGtpZIxi+mobPAS42rnyDFc/WVTc68Q
-# F1EgZMYMdspYtx7LwL3N5GBq/wTbk3IGmAMcm8tmy9XiVY5NsChX3/JSadQVoFqG
-# TwWXV+zYvsKLX18CiVsvp2gjE9kKhwuuH5Y5H9KgFsDiT7Ammg3d2vD94y5OeT7L
-# ZMhOGs1QMj52ad+QCdZ8hlc7xfUAC7Z+oqAhfKqpYQ5iL/1M6V/VPoEJlrtC2SQ+
-# EnqCdCCKKe+lrgos2VZG+x1Uw8TonzWxOe+c+qCFV7OFrCZT3jYmxBI0kScQ7LF6
-# UZEEvuctPs+s3lpAMnKtMNsDnlJvGoR/m8Y4C2WaTp6pTN9R90Mud3Tv2C7H5FhC
-# cQxGt9b62Pe9PvUonzpkS5jc7h0CI54+97xig+5QhIZNUNzTPzqHR7EK0JVttP+e
-# 2tF1oXSOjokZhDOqiqTjYKKqIMjrIHtiJ/qyKz0Q4k6NqXPcgWq0h7mcTnZZCpqJ
-# 7tXdeSa8qffYHL1Eu+34v1VZ+sU2qR3vxYatg17CAoxoiY1xYiOrhw3iViEx20c5
-# /SRloIO77J9S1ZTubwfaGDXREt77PoHaO/d590h4zRWcrBwHpmf1rFWr1eh8b+Xv
-# bKnWN9bTBxU1d4UFg//ZwPzqbI2KpYAZOR+yMg==
+# SIb3DQEJBTEPFw0yNjExMTMwMjM4MDNaMC8GCSqGSIb3DQEJBDEiBCBmluei4g8j
+# +mk1DK1WQBJpL5wzX+BlCGKDSjSnFtlXjTANBgkqhkiG9w0BAQEFAASCAgCN/Ztq
+# 0kjtd3/AZFgHMxJbQWG7Oh4q05zpRUaV1wERogn6CoyiTonuKSSU0op6XH29CgW9
+# XV+qCc2t6iKPn6Z/KoZDQwJK7CuuDR233DwYfHel+S2DAlM4NDF7Ob9EbEzhDHhL
+# e6ZDJ0YGVqKN7xJQ8krIQGCb23jxZIsG28NqEXKcGFwaluqKG2CKJTzum7pRVUxR
+# 2ttZ0hiSDZINt7uYAvD9jTZFZlLMf+KAUMhHoW+kxoP8gGHd6riQJY2p/urZJ/B8
+# NEF0AGGZw1TjT0KIRUgDnorVKHDb++Kr8t9NYRp0lp/hAeesOQT88rZ+osGbZuSf
+# 90i/ae+aJT4Hkwv0CkcxAZ3udTlHnOjUCZfdRy4AXBr66q5u35xIhbvsmHe40qHs
+# g+lT7zJWrNEIrfTqkbolQ3gi9a0h1I3/6VGzDHHSCiR8gaTZfT/vpW40dY0w0J9N
+# XQpjc0FOD+c7MWJfMxQqjVRt3gbMTWSeYpCwskXIHOeur8CKGCzWQIVCaOd0LSrS
+# BeEfwD6TqxcXcoTdHaRCaZPaKVdgFa3bqhpCmnloRQlCAE4Y9NUMnje8lw+XP8df
+# +lZfCIJDELRSHGZvEmWP6Iztp7D4BCIHx0KP2is0+sY336xri/fzjagE6GdxcI0g
+# PsiVZoxehGtRUyycyzQVPKZOHGX3aax/Kc75Mg==
 # SIG # End signature block

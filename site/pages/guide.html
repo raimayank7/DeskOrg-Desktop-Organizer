@@ -38,23 +38,37 @@
     <p>Five tabs down the left side of the window:</p>
     <ul class="tabs-ref">
       <li><span>01</span><b>Overview</b>: your home dashboard, with a welcome and the current state of your setup (rules, automation, log).</li>
-      <li><span>02</span><b>Organize</b>: <b>Organize Now</b> runs the cleanup. You can also open your Windows Desktop folder or the DeskOrg application folder from here.</li>
+      <li><span>02</span><b>Organize</b>: <b>Preview first</b> shows which files would move, without moving anything. <b>Organize now</b> runs the cleanup. <b>Undo last organize</b> puts the files from the last run back. You can also open your Windows Desktop folder or the DeskOrg application folder from here.</li>
       <li><span>03</span><b>Smart Automation</b>: install and enable the background watcher, check its status, disable it, or uninstall automation.</li>
       <li><span>04</span><b>Rules &amp; Settings</b>: edit which file types go into which folder, open the application folder, and refresh the status on the home screen.</li>
       <li><span>05</span><b>Activity &amp; Logs</b>: open the DeskOrg log to see what was moved, and confirm the organizer and automation scripts are present.</li>
     </ul>
 
     <h2 id="rules">Rules and protected file types</h2>
-    <p>Categories and file types are fully editable under <b>Rules &amp; Settings</b>: add a folder, rename it, or move an extension (for example <b>.pdf</b>) to a different category.</p>
+    <p>Categories and file types are fully editable under <b>Rules &amp; Settings</b> with <b>Open rules editor</b>: add a folder, rename it, or move an extension (for example <b>.pdf</b>) to a different category. The editor also lets you tidy your <b>Downloads</b> folder or any other folder, sort into month or year folders, choose what happens when a file with the same name is already there, and list files that must never move (for example <b>invoice-*.pdf</b>).</p>
     <p>Some file types are <b>protected</b>: DeskOrg handles them carefully and leaves them where they are, so important files and shortcuts aren't moved unexpectedly.</p>
     <p>Your rules are saved in your own Windows user profile, so they survive updates and reinstalls.</p>
 
     <h2 id="auto">Smart Automation</h2>
     <p>When automation is on, a small background watcher notices new files on the desktop and files them using the same rules as <b>Organize Now</b>. You don't need to keep the Control Center open.</p>
-    <p>You can check its status, pause it by disabling it, or remove it completely with <b>Uninstall automation</b>, all from the <b>Smart Automation</b> tab.</p>
+    <p>You can check its status, use <b>Pause / resume tidying</b> to stop it for a while, or remove it completely with <b>Uninstall automation</b>, all from the <b>Smart Automation</b> tab. DeskOrg keeps an icon near the clock; closing the window hides it there, and right-clicking the icon offers Open, Organize now, Undo, Pause and Exit. After an automatic tidy, Windows shows a small notification.</p>
+    <h2 id="undo">Undo and preview</h2>
+    <p>Before trusting DeskOrg with a busy folder, press <b>Preview first</b>. Every organize is recorded, so <b>Undo last organize</b> puts those files back, and pressing it again goes one run further back.</p>
 
-    <h2 id="logs">Activity and logs</h2>
-    <p>Every move is written to the DeskOrg log. Open it from <b>Activity &amp; Logs</b> to see what was moved and where, so you can always find a file again.</p>
+    <h2 id="logs">History and logs</h2>
+    <p>Every tidy-up is listed on the <b>History</b> tab with its time. Press <b>Details</b> to see each file and the reason it moved, <b>Put back</b> to return one file, or <b>Undo</b> to return the whole tidy-up. The full log is one click away too, so you can always find a file again.</p>
+
+    <h2 id="new12">New in version 1.2</h2>
+    <p>The tabs now have plain names (Home, Tidy up now, Keep it tidy automatically, Where files go, History) and the Control Center speaks English, Hindi or Punjabi.</p>
+    <ul>
+      <li><b>Welcome screen</b> on first start: pick Desktop and/or Downloads, see a preview, nothing moves until you say so.</li>
+      <li><b>More rules:</b> by file name (for example <b>Screenshot*</b>), by size, and for files untouched for many days. Drag files onto the rules editor to add their types; import and export your rules.</li>
+      <li><b>Quiet hours:</b> times when DeskOrg must not tidy by itself.</li>
+      <li><b>Downloads and other folders</b> are watched live, each with its own options.</li>
+      <li><b>Find duplicate files:</b> identical copies are listed and only the extras you tick go to the Recycle Bin.</li>
+      <li><b>Easier to read:</b> bigger text, high-contrast option, a progress bar, and keyboard shortcuts (F1 opens this guide).</li>
+      <li><b>Private:</b> DeskOrg works only on your PC; it never uploads your files or their names.</li>
+    </ul>
 
     <h2 id="install">Install problems?</h2>
     <p>DeskOrg's files are code-signed with its own certificate, so Windows may show a caution the first time. Click <b>More info</b>, then <b>Run anyway</b>. For every other message (security prompt, antivirus, admin rights, files in use) see the <a href="/setup-help.html">Install help</a> page.</p>
