@@ -1,17 +1,19 @@
 <!--TITLE DeskOrg — Free Desktop Organizer for Windows-->
-<!--DESC DeskOrg sorts the files on your Windows desktop into tidy folders with one click, or automatically in the background. Free, private, runs offline, code-signed.-->
+<!--DESC DeskOrg tidies the files on your Windows desktop and Downloads folder: preview first, sort with one click or automatically, and undo anything. Free, private, runs offline, code-signed. English, Hindi and Punjabi.-->
 <!--LD
 {"@context":"https://schema.org","@graph":[
  {"@type":"SoftwareApplication","name":"DeskOrg","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows",
   "softwareVersion":"{{VERSION}}","fileSize":"{{SIZE}}","downloadUrl":"{{SITE}}download/","url":"{{SITE}}","image":"{{SITE}}logo.png",
-  "description":"A lightweight Windows app that sorts the files on your desktop into category folders, on demand or automatically. Runs locally; nothing is uploaded.",
+  "description":"A lightweight Windows app that tidies your desktop and Downloads into category folders: preview first, sort on demand or automatically, undo anything, find duplicate files. Runs locally; nothing is uploaded.",
   "offers":{"@type":"Offer","price":"0","priceCurrency":"INR"},
   "author":{"@type":"Organization","name":"Nivesh Sahayak","url":"https://www.niveshsahayak.in/"}},
  {"@type":"WebSite","name":"DeskOrg","url":"{{SITE}}"},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is DeskOrg free?","acceptedAnswer":{"@type":"Answer","text":"Yes. DeskOrg is free and released under the MIT licence. There are no ads, accounts or trials."}},
   {"@type":"Question","name":"Does DeskOrg upload my files?","acceptedAnswer":{"@type":"Answer","text":"No. Everything runs on your PC. DeskOrg only moves files between folders on your own computer."}},
-  {"@type":"Question","name":"Does DeskOrg delete anything?","acceptedAnswer":{"@type":"Answer","text":"No. It moves files from the desktop into category folders using your rules, and protected file types are left where they are. The Activity log shows every move."}},
+  {"@type":"Question","name":"Does DeskOrg delete anything?","acceptedAnswer":{"@type":"Answer","text":"No. It moves files into category folders using your rules, and protected files are left where they are. Every tidy-up is listed on the History page and can be undone, as a whole or one file at a time. The only way anything leaves your folders is the Find duplicate files tool, which sends only the extra copies you tick to the Recycle Bin."}},
+  {"@type":"Question","name":"Can I undo a tidy-up?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every tidy-up is recorded on the History page. Press Undo to put the whole tidy-up back, or open Details and press Put back on a single file."}},
+  {"@type":"Question","name":"Can DeskOrg tidy my Downloads folder too?","acceptedAnswer":{"@type":"Answer","text":"Yes. Choose Downloads (or any other folder) in the welcome screen or the rules editor. Each folder can have its own options, and it is watched live like the desktop."}},
   {"@type":"Question","name":"Why does Windows show a warning when I install it?","acceptedAnswer":{"@type":"Answer","text":"DeskOrg is code-signed with its own certificate, which Windows doesn't know yet. Click More info, then Run anyway. The Setup Help page explains every message you might see."}}
  ]}
 ]}
@@ -21,7 +23,7 @@
     <div>
       <span class="eyebrow"><i></i>Free for Windows · v{{VERSION}}</span>
       <h1>Your desktop, <span>sorted automatically.</span></h1>
-      <p class="lead">DeskOrg moves the files piling up on your desktop into tidy folders: documents, images, installers and more. Do it with one click, or let it file new things for you the moment they land.</p>
+      <p class="lead">DeskOrg moves the files piling up on your desktop and Downloads into tidy folders: documents, images, installers and more. Preview what it would do, tidy with one click, or let it file new things for you the moment they land. Changed your mind? Undo it.</p>
       <div class="cta">
         <a class="btn btn-main" href="download/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download for Windows</a>
         <a class="btn btn-ghost" href="#how">See how it works</a>
@@ -52,7 +54,7 @@
         <div class="dir" style="left:59%;top:22%"><svg viewBox="0 0 64 52"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v30a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#D97706"/><path d="M4 18h56v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#FBBF24"/></svg>Installers</div>
         <div class="dir" style="left:34%;top:58%"><svg viewBox="0 0 64 52"><path d="M4 8a4 4 0 0 1 4-4h16l6 6h26a4 4 0 0 1 4 4v30a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#DC2626"/><path d="M4 18h56v26a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="#F87171"/></svg>Archives</div>
       </div>
-      <div class="demo-cap"><span id="demo-state">Before: a cluttered desktop</span><button type="button" id="demo-btn">Organize Now ▸</button></div>
+      <div class="demo-cap"><span id="demo-state">Before: a cluttered desktop</span><button type="button" id="demo-btn">Organize now ▸</button></div>
     </div>
   </div>
 </section>
@@ -61,38 +63,41 @@
   <div class="wrap">
     <div class="sec-hd fade"><div class="kicker">Features</div><h2>Everything you need to keep a clean desktop</h2><p>Small, fast and focused on one job: putting files where they belong, without surprises.</p></div>
     <div class="grid">
-      <div class="card c1 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 21 9-9M12.2 6.2 11 5M15 3l1.2 1.2M19 9l1 1M14 8l2-2"/><path d="m6 18 3-3"/></svg></div><h3>One-click cleanup</h3><p>Press <b>Organize Now</b> and every loose file on the desktop goes into its category folder in seconds.</p></div>
-      <div class="card c2 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Smart automation</h3><p>Turn on the background watcher and new downloads and saves are filed for you, hands-free.</p></div>
-      <div class="card c3 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Your rules</h3><p>Choose which file types go into which folder. Add, rename or remove categories under <b>Rules &amp; Settings</b>.</p></div>
-      <div class="card c4 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h3>Protected file types</h3><p>Important files and shortcuts you mark as protected stay exactly where they are.</p></div>
-      <div class="card c5 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v6c0 4.5 3.4 7.5 8 8 4.6-.5 8-3.5 8-8V7z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Private by design</h3><p>Everything happens on your PC. No account, no tracking, nothing is uploaded anywhere.</p></div>
-      <div class="card c6 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 15h6M9 18h4"/></svg></div><h3>A log of every move</h3><p><b>Activity &amp; Logs</b> shows what was moved and where, so you can always find a file again.</p></div>
+      <div class="card c1 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 21 9-9M12.2 6.2 11 5M15 3l1.2 1.2M19 9l1 1M14 8l2-2"/><path d="m6 18 3-3"/></svg></div><h3>Preview, then one click</h3><p>Press <b>Preview first</b> to see which files would move and why. Then <b>Organize now</b> sorts them into category folders in seconds.</p></div>
+      <div class="card c2 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div><h3>Undo anything</h3><p>Every tidy-up is listed on the <b>History</b> page. Put the whole tidy-up back, or just one file, with the reason it moved shown beside it.</p></div>
+      <div class="card c3 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Smart automation</h3><p>A background watcher files new items on your desktop and Downloads as they arrive. Set quiet hours or pause it any time from the tray icon.</p></div>
+      <div class="card c4 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Your rules</h3><p>Sort by file type, by name (like <b>Screenshot*</b>), by size, by month or year, and move old files away. Drag a file onto the editor to add its type.</p></div>
+      <div class="card c5 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h3>Files that never move</h3><p>Programs, shortcuts, files changed a minute ago and any name or type you protect stay exactly where they are.</p></div>
+      <div class="card c6 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></div><h3>Find duplicate files</h3><p>Finds identical copies, keeps the oldest, and sends only the extras you tick to the Recycle Bin. Nothing is removed without your choice.</p></div>
+      <div class="card c1 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v6c0 4.5 3.4 7.5 8 8 4.6-.5 8-3.5 8-8V7z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Private by design</h3><p>Everything happens on your PC. No account, no tracking, no uploads. It only asks this website whether a newer version exists.</p></div>
+      <div class="card c2 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7M7.5 3v2c0 4-2 7-4.5 8M5 9c1 2 3 4 6 5M13 21l4-9 4 9M14.5 18h5"/></svg></div><h3>Easy to read</h3><p>Use it in English, Hindi or Punjabi, with bigger text or a high-contrast option, and keyboard shortcuts (press F1 for the guide).</p></div>
+      <div class="card c3 fade"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 15h6M9 18h4"/></svg></div><h3>Nothing to hunt for</h3><p>The History page and the log show what moved and where, so you can always find a file again. A small notice appears after an automatic tidy.</p></div>
     </div>
   </div>
 </section>
 
 <section id="how">
   <div class="wrap">
-    <div class="sec-hd fade"><div class="kicker">How it works</div><h2>Tidy in three steps</h2><p>No setup to learn. Run it once to see your desktop sorted, then adjust the rules if you like.</p></div>
+    <div class="sec-hd fade"><div class="kicker">How it works</div><h2>Tidy in three steps</h2><p>Nothing moves until you press a button. Look first, then tidy, and undo if you change your mind.</p></div>
     <ol class="steps">
-      <li class="fade"><h3>Install and open</h3><p>Run <code>DeskOrgSetup.exe</code>, then open DeskOrg from your desktop or Start Menu. The Control Center opens.</p></li>
-      <li class="fade"><h3>Organize Now</h3><p>Go to <b>Organize</b> and press <b>Organize Now</b>. Your desktop is sorted into category folders using your rules.</p></li>
-      <li class="fade"><h3>Automate (optional)</h3><p>In <b>Smart Automation</b>, turn on the watcher so new files are filed automatically from now on.</p></li>
+      <li class="fade"><h3>Install and open</h3><p>Run <code>DeskOrgSetup.exe</code>, then open DeskOrg from your desktop or Start Menu. A welcome screen asks which folders to look after (Desktop, and Downloads if you like) and your language.</p></li>
+      <li class="fade"><h3>Preview, then tidy</h3><p>On <b>Tidy up now</b>, press <b>Preview first</b> to see what would move, then <b>Organize now</b>. Not happy? <b>Undo</b> is one click away on the History page.</p></li>
+      <li class="fade"><h3>Automate (optional)</h3><p>In <b>Keep it tidy automatically</b>, turn on the watcher so new files are filed from now on. Pause it or set quiet hours whenever you like.</p></li>
     </ol>
   </div>
 </section>
 
 <section id="app" class="alt">
   <div class="wrap">
-    <div class="sec-hd fade"><div class="kicker">The app</div><h2>One Control Center, five simple tabs</h2><p>Everything is in one window. Click a tab to see what it does.</p></div>
+    <div class="sec-hd fade"><div class="kicker">The app</div><h2>One window, five simple tabs</h2><p>Everything is in one window. Click a tab to see what it does.</p></div>
     <div class="app fade">
       <div class="app-side" role="tablist" aria-label="Control Center tabs">
         <div class="t"><img src="logo.png" alt="" width="26" height="26">DeskOrg</div>
-        <button class="tab" role="tab" aria-selected="true" data-tab="0"><span>01</span>Overview</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="1"><span>02</span>Organize</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="2"><span>03</span>Smart Automation</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="3"><span>04</span>Rules &amp; Settings</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="4"><span>05</span>Activity &amp; Logs</button>
+        <button class="tab" role="tab" aria-selected="true" data-tab="0"><span>01</span>Home</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="1"><span>02</span>Tidy up now</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="2"><span>03</span>Keep it tidy automatically</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="3"><span>04</span>Where files go</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="4"><span>05</span>History</button>
       </div>
       <div class="app-main" role="tabpanel" id="panel" aria-live="polite"></div>
     </div>
@@ -112,7 +117,7 @@
       <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
       <div>
         <h3>Windows may show a warning the first time</h3>
-        <p>DeskOrg is code-signed with its own certificate, which Windows SmartScreen doesn't know yet. It's safe to continue:</p>
+        <p>DeskOrg is code-signed with its own certificate, which Windows SmartScreen doesn't know yet. It no longer installs a program (.exe) launcher, only signed script files and a small start file, so antivirus programs have less to question. It's safe to continue:</p>
         <ol><li>On "Windows protected your PC", click <b>More info</b>.</li><li>Click <b>Run anyway</b>, then <b>Yes</b> on the next prompt.</li></ol>
         <a class="btn btn-ghost btn-sm" href="setup-help.html">Every install message explained →</a>
       </div>
@@ -126,10 +131,13 @@
     <div class="faq">
       <details class="fade"><summary>Is DeskOrg free?</summary><p>Yes. DeskOrg is free and released under the MIT licence. There are no ads, accounts or trials.</p></details>
       <details class="fade"><summary>Does DeskOrg upload my files?</summary><p>No. Everything runs on your PC. DeskOrg only moves files between folders on your own computer.</p></details>
-      <details class="fade"><summary>Does it delete anything?</summary><p>No. It moves files from the desktop into category folders using your rules, and protected file types are left where they are. The Activity log shows every move, so you can always find a file.</p></details>
-      <details class="fade"><summary>Can I change which folder a file type goes to?</summary><p>Yes. Open <b>Rules &amp; Settings</b> to edit categories and file types. Your rules are saved in your own Windows profile, so they survive updates and reinstalls.</p></details>
-      <details class="fade"><summary>Do I have to keep it running?</summary><p>No. Use <b>Organize Now</b> whenever you like. Only if you turn on <b>Smart Automation</b> does a small background watcher file new items for you; you can disable it any time.</p></details>
-      <details class="fade"><summary>How do I uninstall it?</summary><p>Open Windows <b>Settings › Apps</b>, find DeskOrg and choose <b>Uninstall</b>. Your organized folders stay on the desktop.</p></details>
+      <details class="fade"><summary>Does it delete anything?</summary><p>No. It moves files into category folders using your rules, and protected files stay where they are. Every tidy-up is listed on the <b>History</b> page and can be undone. The only tool that removes anything is <b>Find duplicate files</b>, and it sends only the extra copies you tick to the Recycle Bin.</p></details>
+      <details class="fade"><summary>Can I undo a tidy-up?</summary><p>Yes. Open <b>History</b>, press <b>Undo</b> to put a whole tidy-up back, or <b>Details</b> then <b>Put back</b> to return a single file to the folder it came from.</p></details>
+      <details class="fade"><summary>Can it tidy Downloads or other folders?</summary><p>Yes. Pick Downloads in the welcome screen, or add it (or any folder) under <b>Where files go</b>. Each folder can have its own options, and the watcher follows them live.</p></details>
+      <details class="fade"><summary>Can I change which folder a file type goes to?</summary><p>Yes. Open <b>Where files go</b> and press <b>Open rules editor</b>. You can sort by type, by name (for example <b>Screenshot*</b>), by size, by month or year, and protect files you never want moved. Your rules are saved in your own Windows profile, so they survive updates, and you can export them to use on another PC.</p></details>
+      <details class="fade"><summary>Do I have to keep it running?</summary><p>No. Use <b>Organize now</b> whenever you like. Only if you turn on automation does a small background watcher file new items for you; you can pause it from the tray icon or turn it off any time.</p></details>
+      <details class="fade"><summary>Is it available in my language?</summary><p>The main screens are in English, Hindi and Punjabi. Choose the language on the welcome screen or under <b>Where files go</b>. You can also make the text bigger or use high-contrast text there.</p></details>
+      <details class="fade"><summary>How do I uninstall it?</summary><p>Open Windows <b>Settings › Apps</b>, find DeskOrg and choose <b>Uninstall</b>. It also removes the background watcher and its startup task. Your organized folders stay where they are.</p></details>
     </div>
   </div>
 </section>
@@ -148,16 +156,16 @@
 (function () {
   /* hero demo: the cluttered desktop sorts itself, and the button toggles it */
   var desk = document.getElementById('desk'), btn = document.getElementById('demo-btn'), st = document.getElementById('demo-state');
-  function set(on) { desk.classList.toggle('sorted', on); st.textContent = on ? 'After: everything in its folder' : 'Before: a cluttered desktop'; btn.textContent = on ? '↺ Show before' : 'Organize Now ▸'; }
+  function set(on) { desk.classList.toggle('sorted', on); st.textContent = on ? 'After: everything in its folder' : 'Before: a cluttered desktop'; btn.textContent = on ? '↺ Show before' : 'Organize now ▸'; }
   btn.addEventListener('click', function () { set(!desk.classList.contains('sorted')); });
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(function () { set(true); }, 1800);
   /* Control Center tabs */
   var T = [
-    ['Overview', 'Your home dashboard: a quick welcome and the current state of your setup.', ['Rules in use', 'Whether automation is on', 'Where the log is kept']],
-    ['Organize', 'Runs the cleanup. One press sorts the desktop into category folders.', ['Organize Now', 'Open your Windows Desktop folder', 'Open the DeskOrg application folder']],
-    ['Smart Automation', 'A background watcher that files new items as they arrive.', ['Install and enable the watcher', 'Check its status', 'Disable or uninstall it any time']],
-    ['Rules & Settings', 'Decide which file types go into which folder.', ['Edit categories and file types', 'Protected types stay put', 'Saved in your own Windows profile']],
-    ['Activity & Logs', 'See exactly what was moved and where.', ['Open the DeskOrg log', 'Confirm the organizer and automation are installed', 'Find any file again']]
+    ['Home', 'A quick welcome and shortcuts to everything else, plus a note on how DeskOrg keeps your files private.', ['Jump to any page', 'See at a glance that rules and automation are ready', 'Private by design: nothing leaves your PC']],
+    ['Tidy up now', 'Look first, then tidy. Everything can be undone.', ['Preview first: see what would move and why', 'Organize now', 'Undo last organize', 'Find duplicate files']],
+    ['Keep it tidy automatically', 'A background watcher that files new items on your desktop and Downloads as they arrive.', ['Install and enable the watcher', 'Pause or resume with one click', 'Quiet hours: no tidying while you work']],
+    ['Where files go', 'Your rules, language and appearance.', ['Rules editor: types, names, sizes, dates, old files', 'Drag a file onto the editor to add its type', 'Import and export your rules', 'English, Hindi or Punjabi; bigger text; high contrast']],
+    ['History', 'See what was tidied, and put anything back.', ['Every tidy-up listed with its time', 'Details: each file and the reason it moved', 'Undo a whole tidy-up or one single file']]
   ];
   var tabs = [].slice.call(document.querySelectorAll('.tab')), panel = document.getElementById('panel');
   function show(i) {
