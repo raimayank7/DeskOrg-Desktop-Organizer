@@ -180,3 +180,41 @@ section{padding:72px 0}
 .issue ol{margin:0;padding-left:22px;color:var(--soft)}.issue li{margin:5px 0}
 .tag{display:inline-block;padding:4px 10px;border-radius:999px;font:800 11.5px var(--body);letter-spacing:.06em;text-transform:uppercase}
 .tag.t1{background:var(--grad);color:#0B0D16}.tag.t2{background:color-mix(in srgb,var(--violet) 18%,transparent);color:var(--violet)}.tag.t3{background:var(--bg2);color:var(--muted)}
+
+/* ===== phone and small tablet menu (the main nav hides below 861 px): a bottom sheet. Desktop unchanged. ===== */
+.menu-b,.sheet{display:none}
+@media (max-width:860px){
+  .menu-b{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--card);color:var(--ink);cursor:pointer;flex:none}
+  .menu-b svg{width:22px;height:22px}
+  .hd .wrap{gap:10px}
+  .sheet[open]{display:block;margin:auto 0 0;width:100%;max-width:100%;max-height:85dvh;border:0;border-radius:22px 22px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));background:var(--card);color:var(--ink);box-shadow:0 -12px 40px rgba(0,0,0,.3);animation:shUp .22s ease-out}
+  .sheet::backdrop{background:rgba(11,13,22,.55)}
+  .sheet-top{display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px;font:800 18px var(--head)}
+  .sheet-x{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line2);background:none;color:var(--ink);cursor:pointer}
+  .sheet-x svg{width:20px;height:20px}
+  .sheet-nav{display:grid;gap:2px}
+  .sheet-nav a{display:flex;align-items:center;min-height:48px;padding:0 12px;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:600;font-size:16.5px}
+  .sheet-nav a:active,.sheet-nav a:hover{background:var(--bg2)}
+  .sheet-note{margin:12px 2px;color:var(--muted);font-size:14px}
+  .sheet-acts{display:grid;gap:8px}.sheet-acts .btn{width:100%;min-height:48px;white-space:normal}
+}
+@keyframes shUp{from{transform:translateY(36px);opacity:.5}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet[open]{animation:none}}
+@media (max-width:600px){
+  .hd .wrap{height:60px}
+  .hd .btn-sm{min-height:44px}
+  .btn{min-height:46px}
+  .ft a{display:inline-flex;align-items:center;min-height:44px}
+  .ft-grid nav{display:flex;flex-direction:column}
+  main p a,main li a,.hero-note a,.fineprint a{padding-top:12px;padding-bottom:12px}
+  .toc a{min-height:44px;display:inline-flex;align-items:center}
+}
+@media (max-width:600px){
+  .toc{flex-wrap:nowrap;overflow-x:auto;max-width:100%;min-width:0;padding:0 0 6px;scrollbar-width:none;scroll-snap-type:x proximity}
+  .toc::-webkit-scrollbar{display:none}
+  .toc b{display:none}
+  .toc a{flex:none;border:1px solid var(--line2);border-left-width:1px;background:var(--card);white-space:nowrap;scroll-snap-align:start}
+}
+@media (max-width:600px){.logo{min-height:44px}#demo-btn{min-height:44px;padding-left:10px;padding-right:10px}.app-side .tab{min-height:44px}}
+@media (max-width:600px){.grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin:0 -20px;padding:4px 20px 14px;scroll-padding:0 20px;scrollbar-width:none}.grid::-webkit-scrollbar{display:none}.grid>*{flex:0 0 84%;scroll-snap-align:start}}
+@media (max-width:400px){.grid{margin:0 -16px;padding-left:16px;padding-right:16px;scroll-padding:0 16px}}

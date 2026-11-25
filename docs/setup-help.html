@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap">
-<link rel="stylesheet" href="/site.css?v=1ed02d4b">
+<link rel="stylesheet" href="/site.css?v=9ec1b0e8">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
  {"@type":"HowTo","name":"Install DeskOrg when Windows blocks the installer","url":"https://deskorg.niveshsahayak.in/setup-help.html",
@@ -37,8 +37,17 @@
       <a href="/#features">Features</a><a href="/#how">How it works</a><a href="/guide.html">User guide</a><a href="/setup-help.html" aria-current="page">Install help</a><a href="/#faq">FAQ</a>
     </nav>
     <a class="btn btn-main btn-sm" href="/download/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Download</span></a>
+    <button class="menu-b" type="button" aria-haspopup="dialog" aria-controls="sheet" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
 </header>
+<dialog class="sheet" id="sheet" aria-label="Menu">
+  <div class="sheet-top"><b>DeskOrg</b><button class="sheet-x" type="button" aria-label="Close menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <nav class="sheet-nav" aria-label="Menu">
+    <a href="/">Home</a><a href="/#features">Features</a><a href="/#how">How it works</a><a href="/guide.html">User guide</a><a href="/setup-help.html">Install help</a><a href="/#faq">FAQ</a><a href="https://help.groupchaton.com/topics/deskorg/">Help articles</a>
+  </nav>
+  <p class="sheet-note">DeskOrg runs on a Windows computer. On your phone? Send the link to yourself and open it on the PC.</p>
+  <div class="sheet-acts"><button class="btn btn-ghost" type="button" data-sendlink>Send the link to my computer</button><a class="btn btn-main" href="/download/">Download for Windows</a></div>
+</dialog>
 
 <main id="main">
 <section class="ph">
@@ -108,6 +117,19 @@
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -40px' });
     [].forEach.call(els, function (e) { io.observe(e); });
   } else [].forEach.call(els, function (e) { e.classList.add('in'); });
+  /* phone menu: a bottom sheet */
+  var sh = document.getElementById('sheet'), mb = document.querySelector('.menu-b');
+  if (sh && mb && sh.showModal) {
+    mb.addEventListener('click', function () { sh.showModal(); });
+    sh.addEventListener('click', function (e) { if (e.target === sh || e.target.closest('.sheet-x') || e.target.closest('.sheet-nav a')) sh.close(); });
+    var sl = sh.querySelector('[data-sendlink]');
+    if (sl) sl.addEventListener('click', function () {
+      var u = location.origin + '/download/', t = 'DeskOrg: free desktop organizer for Windows';
+      if (navigator.share) { navigator.share({ title: t, url: u }).catch(function () {}); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(u).then(function () { sl.textContent = 'Link copied: paste it in WhatsApp or email'; }, function () { location.href = 'mailto:?subject=' + encodeURIComponent(t) + '&body=' + encodeURIComponent(u); });
+      else location.href = 'mailto:?subject=' + encodeURIComponent(t) + '&body=' + encodeURIComponent(u);
+    });
+  } else if (mb) mb.hidden = true;
 })();
 </script>
 <script async src="https://assets.niveshsahayak.in/assets/credit.js"></script>
